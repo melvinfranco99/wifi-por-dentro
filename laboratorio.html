@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El laboratorio wifi</title>
+<meta name="description" content="Cómo montar en Linux un laboratorio wifi con tarjetas virtuales (mac80211_hwsim), ip netns, hostapd y wpa_supplicant para practicar cobertura, interferencias y roaming.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="index.html">wifi<span>·</span>por dentro</a>
+  <nav class="topnav">
+    <a href="index.html">Inicio</a>
+    <a href="senal.html">Señal</a>
+    <a href="canales.html">Canales</a>
+    <a href="velocidad.html">Velocidad</a>
+    <a href="roaming.html">Roaming</a>
+    <a href="potencia.html">Potencia</a>
+    <a href="analizador.html">Analizador</a>
+    <a href="laboratorio.html" class="active">Laboratorio</a>
+  </nav>
+  <button id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro">◐</button>
+</div></header>
+
+<div class="layout">
+<aside class="toc"><h4>En esta página</h4><ol></ol></aside>
+<main>
+<span class="tag">7 · Laboratorio</span>
+<h1>El laboratorio: wifi sin moverte de la silla</h1>
+<p class="lead">Todo lo de esta web se practica en un Linux normal con <strong>tarjetas wifi virtuales</strong> que crea el propio kernel. Tu wifi de verdad no se toca.</p>
+
+<h2 id="piezas">Las piezas</h2>
+<div class="table-wrap"><table>
+<tr><th>Herramienta</th><th>Para qué</th></tr>
+<tr><td><code>mac80211_hwsim</code></td><td>Módulo del kernel que crea tarjetas wifi de mentira que se "oyen" entre ellas</td></tr>
+<tr><td><code>ip netns</code></td><td>Crea "cajas" de red aisladas: una para los APs y otra para el PC</td></tr>
+<tr><td><code>hostapd</code> / <code>hostapd_cli</code></td><td>Convierte una tarjeta en punto de acceso y le da órdenes (cambiar de canal, echar clientes, 802.11v…)</td></tr>
+<tr><td><code>wpa_supplicant</code> / <code>wpa_cli</code></td><td>El cliente wifi de Linux: decide a qué AP conectarse y cuándo cambiar</td></tr>
+<tr><td><code>iw</code></td><td>Escanear, ver la señal, cambiar la potencia y las velocidades</td></tr>
+<tr><td><code>bridge</code></td><td>El "switch" que une los APs por cable</td></tr>
+<tr><td><code>tc netem</code></td><td>Añade pérdidas y retardo para imitar la distancia (parte 1)</td></tr>
+</table></div>
+
+<h2 id="montaje">Cómo queda montado</h2>
+<figure class="diagram">
+<svg viewBox="0 0 760 330" role="img" aria-label="Namespace aps con un bridge br0 y tres APs más el router del vecino; namespace pc con la tarjeta del PC y wpa_supplicant; todas las radios comparten el aire simulado">
+  <rect x="20" y="14" width="720" height="170" rx="12" style="fill:none;stroke:var(--axis);stroke-dasharray:6 4"/>
+  <text x="36" y="36" style="font-weight:700">netns "aps"</text>
+  <rect x="300" y="28" width="170" height="38" rx="8" class="b"/>
+  <text x="385" y="52" text-anchor="middle">br0 · 192.168.50.1</text>
+  <path class="ln" d="M385 66 V86 M110 86 H560 M110 86 V106 M335 86 V106 M560 86 V106"/>
+  <rect x="40" y="106" width="140" height="56" rx="8" style="fill:var(--s1)"/>
+  <text x="110" y="130" text-anchor="middle" class="w">wifi_ap1 · canal 1</text>
+  <text x="110" y="150" text-anchor="middle" class="w" style="font-weight:400;font-size:11px">02:11:11:11:11:11</text>
+  <rect x="265" y="106" width="140" height="56" rx="8" style="fill:var(--s2)"/>
+  <text x="335" y="130" text-anchor="middle" class="w">wifi_ap2 · canal 6</text>
+  <text x="335" y="150" text-anchor="middle" class="w" style="font-weight:400;font-size:11px">02:22:22:22:22:22</text>
+  <rect x="490" y="106" width="140" height="56" rx="8" style="fill:var(--s3)"/>
+  <text x="560" y="130" text-anchor="middle" class="w">wifi_ap3 · canal 11</text>
+  <text x="560" y="150" text-anchor="middle" class="w" style="font-weight:400;font-size:11px">02:33:33:33:33:33</text>
+  <rect x="640" y="28" width="90" height="56" rx="8" style="fill:var(--s4)"/>
+  <text x="685" y="52" text-anchor="middle" class="w">vecino</text>
+  <text x="685" y="72" text-anchor="middle" class="w" style="font-weight:400;font-size:11px">canal 3</text>
+  <text x="380" y="214" text-anchor="middle" class="m">))))   aire simulado: se oyen las radios del mismo canal   ((((</text>
+  <rect x="250" y="236" width="260" height="80" rx="12" style="fill:none;stroke:var(--axis);stroke-dasharray:6 4"/>
+  <text x="266" y="258" style="font-weight:700">netns "pc"</text>
+  <text x="380" y="282" text-anchor="middle">wifi_pc · 192.168.50.10</text>
+  <text x="380" y="302" text-anchor="middle" class="m">wpa_supplicant · 02:aa:aa:aa:aa:aa</text>
+</svg>
+</figure>
+
+<h2 id="guias">Las guías</h2>
+<div class="table-wrap"><table>
+<tr><th>Guía</th><th>Qué se hace</th><th>En esta web</th></tr>
+<tr><td>01-04</td><td>Un AP y un PC: montar, potencia, distancia con <code>tc netem</code>, limpiar</td><td><a href="senal.html">Señal</a></td></tr>
+<tr><td>05</td><td>Teoría con números</td><td>Toda la web</td></tr>
+<tr><td>06</td><td>Montar 3 APs + vecino + PC con <code>wpa_supplicant</code></td><td>Esta página</td></tr>
+<tr><td>07</td><td>Analizar el aire, cambiar de canal en caliente (CSA), cocanal contra adyacente</td><td><a href="canales.html">Canales</a></td></tr>
+<tr><td>08</td><td>MCS, cliente lento, enlace desequilibrado</td><td><a href="velocidad.html">Velocidad</a></td></tr>
+<tr><td>09</td><td>El paseo por el pasillo y el cliente pegajoso</td><td><a href="roaming.html">Roaming</a></td></tr>
+<tr><td>10</td><td>Echar, rechazar y 802.11v</td><td><a href="roaming.html#echar">Roaming</a></td></tr>
+<tr><td>11</td><td>Tamaño de celda, reutilizar canales, velocidades básicas</td><td><a href="potencia.html">Potencia</a></td></tr>
+<tr><td>12</td><td>Analizadores con tu wifi real</td><td><a href="analizador.html">Analizador</a></td></tr>
+<tr><td>13</td><td>Limpiar</td><td></td></tr>
+</table></div>
+
+<h2 id="chuleta">Chuleta de comandos</h2>
+<h3>Montar</h3>
+<pre><code># 5 tarjetas wifi virtuales (AP1, AP2, AP3, vecino y PC)
+sudo modprobe mac80211_hwsim radios=5
+# Las dos cajas
+sudo ip netns add aps
+sudo ip netns add pc
+# Mover una radio a una caja (usa tus números de phy)
+sudo iw phy phy1 set netns name aps
+# Arrancar los 4 APs de una vez (terminal 2)
+sudo ip netns exec aps hostapd hostapd_ap1.conf hostapd_ap2.conf hostapd_ap3.conf hostapd_vecino.conf
+# Arrancar el cliente (terminal 3)
+sudo ip netns exec pc wpa_supplicant -i wifi_pc -c wpa_pc.conf</code></pre>
+<h3>Mirar</h3>
+<pre><code># A qué AP está conectado el PC y en qué frecuencia
+sudo wpa_cli -p /run/wpa_lab -i wifi_pc status
+# Señal y velocidad del enlace
+sudo wpa_cli -p /run/wpa_lab -i wifi_pc signal_poll
+# Clientes de un AP
+sudo hostapd_cli -p /run/hostapd_lab -i wifi_ap1 all_sta
+# Escanear y analizar
+sudo wpa_cli -p /run/wpa_lab -i wifi_pc scan
+sudo ip netns exec pc iw dev wifi_pc scan dump | python3 analizador_wifi.py LAB_WIFI</code></pre>
+<h3>Tocar</h3>
+<pre><code># "Mover" el PC: cambiar la potencia de un AP (en mBm: 1000 = 10 dBm)
+sudo ip netns exec aps iw dev wifi_ap1 set txpower fixed 1000
+# Cambiar de canal sin desconectar a nadie (frecuencia = 2407 + 5 × canal)
+sudo hostapd_cli -p /run/hostapd_lab -i wifi_ap2 chan_switch 5 2437 ht
+# Roaming a mano
+sudo wpa_cli -p /run/wpa_lab -i wifi_pc roam 02:33:33:33:33:33
+# El AP echa al PC
+sudo hostapd_cli -p /run/hostapd_lab -i wifi_ap1 deauthenticate 02:aa:aa:aa:aa:aa
+# 802.11v: "vete al AP2, por favor"
+sudo hostapd_cli -p /run/hostapd_lab -i wifi_ap1 bss_tm_req 02:aa:aa:aa:aa:aa pref=1 abridged=1 neighbor=02:22:22:22:22:22,0x0000,81,6,7</code></pre>
+<h3>Limpiar</h3>
+<pre><code>sudo ip netns del pc
+sudo ip netns del aps
+sudo modprobe -r mac80211_hwsim</code></pre>
+
+<h2 id="limites">Límites del simulador</h2>
+<div class="table-wrap"><table>
+<tr><th>Lo que el simulador NO hace</th><th>Cómo se suple</th></tr>
+<tr><td>No hay metros: la señal es siempre <em>potencia − 50</em> (de -30 a -50 dBm)</td><td>La distancia se imita cambiando la potencia de cada AP; <code>mapa_aps.py</code> da las potencias para cada metro</td></tr>
+<tr><td>No simula canales solapados ni que el aire se llene</td><td>Se calcula con <code>mapa_aps.py</code> y <code>calculadora_velocidad.py</code> (el mismo modelo que esta web)</td></tr>
+<tr><td>El AP oye al PC igual desde todos los APs</td><td>Se baja la potencia del PC y se configura el rechazo solo en un AP</td></tr>
+<tr><td>Nunca baja de -50 dBm, así que Linux nunca hace roaming solo</td><td>Es justo el cliente pegajoso: se fuerza con <code>roam</code>, <code>deauthenticate</code> o 802.11v</td></tr>
+</table></div>
+<p>El siguiente paso, si quieres simular posiciones e interferencias de verdad, es <strong>wmediumd</strong>: un "medio de radio" para <code>mac80211_hwsim</code> con coordenadas, pérdidas por distancia e interferencias.</p>
+
+<p class="footer">Requisitos en Arch Linux: <code>sudo pacman -S iw hostapd wpa_supplicant iproute2 iputils python</code></p>
+
+<div class="next"><a href="analizador.html">← Analizadores wifi</a><a href="index.html">Volver al inicio →</a></div>
+</main>
+</div>
+</body>
+</html>

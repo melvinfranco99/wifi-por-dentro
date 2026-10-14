@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roaming wifi</title>
+<meta name="description" content="Cuándo cambia un móvil o un portátil de punto de acceso, el cliente pegajoso, cómo decide Linux y qué puede hacer el AP para echarte o empujarte al AP bueno.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="index.html">wifi<span>·</span>por dentro</a>
+  <nav class="topnav">
+    <a href="index.html">Inicio</a>
+    <a href="senal.html">Señal</a>
+    <a href="canales.html">Canales</a>
+    <a href="velocidad.html">Velocidad</a>
+    <a href="roaming.html" class="active">Roaming</a>
+    <a href="potencia.html">Potencia</a>
+    <a href="analizador.html">Analizador</a>
+    <a href="laboratorio.html">Laboratorio</a>
+  </nav>
+  <button id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro">◐</button>
+</div></header>
+
+<div class="layout">
+<aside class="toc"><h4>En esta página</h4><ol></ol></aside>
+<main>
+<span class="tag">4 · Roaming</span>
+<h1>Roaming: cambiar de punto de acceso</h1>
+<p class="lead">Tienes varios APs con el mismo nombre de red. Te mueves. ¿Cuándo se cambia tu móvil al AP más cercano? Spoiler: más tarde de lo que crees, y el que decide es él.</p>
+
+<h2 id="decide">Quién decide: siempre el cliente</h2>
+<p>El AP <strong>no puede</strong> pasarte a otro AP. Solo el móvil o el portátil decide cuándo cambiarse. Y la mayoría son <strong>pegajosos</strong> (<em>sticky clients</em>): no sueltan el AP en el que están mientras "vaya bien", aunque tengan uno mucho mejor al lado.</p>
+<p>Así decide Linux (<code>wpa_supplicant</code> 2.12, sacado de su código):</p>
+<figure class="diagram">
+<svg viewBox="0 0 760 340" role="img" aria-label="Diagrama de decisión de wpa_supplicant: si el SNR actual es mayor de 25 dB no cambia; si no, cambia solo si el otro AP es suficientemente mejor">
+  <rect x="270" y="10" width="220" height="40" rx="8" class="b"/>
+  <text x="380" y="35" text-anchor="middle">Escanea (bgscan) y ve otro AP</text>
+  <path class="ln" d="M380 50 V74 M375 66 l5 8 l5 -8"/>
+  <rect x="220" y="76" width="320" height="52" rx="8" class="b"/>
+  <text x="380" y="98" text-anchor="middle">¿El AP actual va bien?</text>
+  <text x="380" y="117" text-anchor="middle" class="m">SNR &gt; 25 dB  (≈ señal mejor que -64 dBm)</text>
+  <path class="ln" d="M540 102 H620 V150 M615 142 l5 8 l5 -8"/>
+  <text x="580" y="94" class="m">sí</text>
+  <rect x="560" y="152" width="170" height="44" rx="8" style="fill:var(--s2)"/>
+  <text x="645" y="179" text-anchor="middle" class="w">NO cambia</text>
+  <path class="ln" d="M380 128 V160 M375 152 l5 8 l5 -8"/>
+  <text x="390" y="148" class="m">no</text>
+  <rect x="160" y="162" width="360" height="52" rx="8" class="b"/>
+  <text x="340" y="184" text-anchor="middle">¿El otro se oye más fuerte por al menos…?</text>
+  <text x="340" y="203" text-anchor="middle" class="m">5 dB (señal -64…-70) · 4 (-71…-75) · 3 (-76…-80) · 2 (-81…-85) · 1</text>
+  <path class="ln" d="M520 188 H556 M548 183 l8 5 l-8 5"/>
+  <path class="ln" d="M340 214 V246 M335 238 l5 8 l5 -8"/>
+  <text x="350" y="234" class="m">sí</text>
+  <text x="528" y="182" class="m">no</text>
+  <rect x="250" y="248" width="180" height="44" rx="8" style="fill:var(--s3)"/>
+  <text x="340" y="275" text-anchor="middle" class="w">CAMBIA de AP</text>
+  <text x="20" y="312" class="m">Excepción: si estima que el otro AP le da más de 5 Mbit/s más (otro ancho de canal, wifi 6…), cambia aunque el actual vaya bien.</text>
+  <text x="20" y="328" class="m">Si pierde el AP (lo apagan, le echan…), al reconectar elige el de mejor SNR.</text>
+</svg>
+</figure>
+
+<h3>Pruébalo: ¿cambiaría Linux?</h3>
+<figure class="chart">
+  <div class="controls">
+    <label>Señal del AP actual <input type="range" id="cur" min="-90" max="-30" value="-66"> <output id="cur-o"></output></label>
+    <label>Señal del otro AP <input type="range" id="sel" min="-90" max="-30" value="-58"> <output id="sel-o"></output></label>
+  </div>
+  <div class="box" id="decision" style="margin:4px 0"></div>
+</figure>
+
+<h2 id="paseo">El paseo: muévete por el pasillo</h2>
+<p>Arrastra el PC por el pasillo de 60 m (o pulsa ▶). Compara el <strong>roaming ideal</strong> (siempre en el AP que mejor se oye) con un <strong>cliente pegajoso</strong> típico de móvil (solo busca otro AP por debajo de -70 dBm y cambia si es 5 dB mejor).</p>
+<figure class="chart">
+  <div class="controls">
+    <label>Escenario <select id="esc">
+      <option value="A">A · 3 APs a 20 dBm cada 30 m</option>
+      <option value="I" selected>I · 2 APs a 20 dBm, a 60 m</option>
+      <option value="E">E · 5 APs a 5 dBm cada 15 m</option>
+      <option value="D">D · 3 APs a 10 dBm cada 30 m</option>
+      <option value="C">C · 3 APs, canales solapados 1-3-6</option>
+    </select></label>
+    <label>Metro <input type="range" id="metro" min="0" max="60" value="40"> <output id="metro-o"></output></label>
+    <button id="play" class="seg" style="padding:6px 12px;cursor:pointer;background:var(--surface);color:var(--ink)">▶ Pasear</button>
+  </div>
+  <div class="stats" id="paseo-stats"></div>
+  <p class="ch-title" style="margin-top:14px">Señal de cada AP a lo largo del pasillo</p>
+  <div id="g-senales"></div>
+  <p class="ch-title" style="margin-top:18px">Velocidad real: roaming ideal frente a cliente pegajoso</p>
+  <div id="g-vel"></div>
+  <figcaption>En el escenario I, entre los metros 35 y 45 el pegajoso sigue en el AP1 (a -66…-70 dBm) teniendo el otro AP mucho mejor: pierde unos 30 Mbit/s. Con celdas pequeñas (E) la señal cae antes por debajo del umbral y el pegajoso cambia antes.</figcaption>
+</figure>
+
+<h2 id="corte">Cuánto se corta al cambiar</h2>
+<figure class="chart">
+  <p class="ch-title">Corte típico al cambiar de AP (milisegundos)</p>
+  <div id="g-corte"></div>
+  <figcaption>Una llamada de voz o vídeo aguanta cortes de unos 150 ms. Con WPA2-Enterprise (usuario y contraseña, típico de empresas y universidades) hay que repetir la autenticación con el servidor: por eso existe <strong>802.11r</strong> (<em>Fast Transition</em>), que deja las claves preparadas en el AP nuevo.</figcaption>
+</figure>
+
+<h2 id="echar">El AP te echa (o te empuja)</h2>
+<p>Lo que propones, "que el AP te eche según te alejas y te conectes al más cercano", existe y se llama <strong>minimum RSSI</strong> o <em>client steering</em>. Como el AP no puede decidir por el cliente, tiene estas herramientas, de la más suave a la más bruta:</p>
+<div class="table-wrap"><table>
+<tr><th>Técnica</th><th>Qué hace</th><th>Corte</th><th>Riesgo</th></tr>
+<tr><td><strong>802.11k</strong> (Neighbor Report)</td><td>Da al móvil la lista de APs vecinos para que busque más rápido</td><td>—</td><td><span class="st st-good">Ninguno</span></td></tr>
+<tr><td><strong>802.11v</strong> (BSS Transition)</td><td>"Por favor, vete a este otro AP." El móvil puede negarse</td><td>Como un roaming normal</td><td><span class="st st-good">Bajo</span></td></tr>
+<tr><td>Ignorar a los lejanos</td><td>No contesta a los que preguntan con poca señal</td><td>—</td><td><span class="st st-ok">Medio</span></td></tr>
+<tr><td>Rechazar por señal</td><td>No deja conectarse a quien llega flojo (código 34: <em>poor channel conditions</em>)</td><td>—</td><td><span class="st st-ok">Medio</span></td></tr>
+<tr><td><strong>Echar</strong> (deauth)</td><td>Desconecta al cliente; al reconectar elige el AP mejor</td><td>~1 s o más</td><td><span class="st st-bad">Alto si no hay a dónde ir</span></td></tr>
+</table></div>
+<p>En los equipos de verdad: <em>Minimum RSSI</em> en Ubiquiti, <code>signal-range</code> en las access-list de MikroTik, <code>usteer</code> o <code>DAWN</code> en OpenWrt.</p>
+
+<h3>Dónde poner cada umbral</h3>
+<figure class="diagram">
+<svg viewBox="0 0 760 250" role="img" aria-label="Escala de umbrales: diseño a -67 dBm, el cliente busca otro AP a -70 o -75, el AP echa a -75 o -80, sin conexión a -85">
+  <defs><linearGradient id="gq" x1="0" x2="1"><stop offset="0" stop-color="#0ca30c"/><stop offset=".45" stop-color="#fab219"/><stop offset=".75" stop-color="#ec835a"/><stop offset="1" stop-color="#d03b3b"/></linearGradient></defs>
+  <rect x="40" y="110" width="680" height="16" rx="8" fill="url(#gq)"/>
+  <text x="40" y="150" class="m">-50</text><text x="720" y="150" text-anchor="end" class="m">-90 dBm</text>
+  <g><line x1="261" y1="70" x2="261" y2="132" class="ln"/><text x="261" y="40" text-anchor="middle" style="font-weight:700">-67</text><text x="261" y="58" text-anchor="middle" class="m">diseño: mínimo en toda la zona</text></g>
+  <g><line x1="342" y1="132" x2="342" y2="186" class="ln"/><text x="342" y="204" text-anchor="middle" style="font-weight:700">-70 / -75</text><text x="342" y="222" text-anchor="middle" class="m">el cliente empieza a buscar</text></g>
+  <g><line x1="508" y1="70" x2="508" y2="132" class="ln"/><text x="508" y="40" text-anchor="middle" style="font-weight:700">-75 / -80</text><text x="508" y="58" text-anchor="middle" class="m">el AP echa o rechaza</text></g>
+  <g><line x1="635" y1="132" x2="635" y2="186" class="ln"/><text x="635" y="204" text-anchor="middle" style="font-weight:700">-85</text><text x="635" y="222" text-anchor="middle" class="m">sin conexión</text></g>
+</svg>
+</figure>
+<div class="box warn"><strong>El peligro:</strong> si el umbral para echar es <em>más alto</em> que la señal que hay en el borde de la celda vecina, echas a gente que <strong>no tiene a dónde ir</strong>. En el laboratorio se ve: con el rechazo a -45 dBm en los tres APs, el PC se queda sin wifi teniendo -30 dBm de señal. Reglas: diseña bien primero, pide antes de echar (802.11v), y echa solo si hay otro AP al menos 5-10 dB mejor.</div>
+
+<h2 id="pegajoso">Qué hacer con un cliente pegajoso</h2>
+<div class="table-wrap"><table>
+<tr><th>Dónde</th><th>Qué se puede hacer</th></tr>
+<tr><td>Linux con <code>iwd</code></td><td><code>RoamThreshold</code> en <code>/etc/iwd/main.conf</code> (por defecto -70)</td></tr>
+<tr><td>Linux con <code>wpa_supplicant</code></td><td><code>bgscan</code> (NetworkManager ya pone uno). La regla del SNR &gt; 25 no se puede cambiar</td></tr>
+<tr><td>Windows</td><td>Propiedades del adaptador → "Agresividad de itinerancia"</td></tr>
+<tr><td>Móviles</td><td>Nada: decide el fabricante. Apagar y encender el wifi le obliga a elegir el mejor</td></tr>
+<tr><td>En los APs</td><td>Bajar la potencia (ver <a href="potencia.html">Potencia</a>), activar 802.11k/v y echar a los lejanos</td></tr>
+</table></div>
+
+<div class="box lab">El simulador solo llega a -50 dBm (SNR 39 dB), así que <code>wpa_supplicant</code> <strong>nunca cambia solo</strong>: el PC se queda en el AP1 todo el pasillo. Es exactamente el cliente pegajoso. El cambio se fuerza con <code>wpa_cli roam &lt;BSSID&gt;</code>, apagando el AP (<code>hostapd_cli disable</code>), echándolo (<code>hostapd_cli deauthenticate</code>) o con 802.11v (<code>hostapd_cli bss_tm_req</code>). Un <code>ping -i 0.2 -O</code> en otra terminal muestra cuánto se corta.</div>
+
+<div class="next"><a href="velocidad.html">← Señal y velocidad</a><a href="potencia.html">¿Bajar la potencia? →</a></div>
+</main>
+</div>
+
+<script>
+// ¿Cambiaría Linux?
+const cur = document.getElementById("cur"), sel = document.getElementById("sel");
+function pintarDecision() {
+  const c = +cur.value, s = +sel.value;
+  document.getElementById("cur-o").textContent = c + " dBm";
+  document.getElementById("sel-o").textContent = s + " dBm";
+  const snr = c + 89;
+  const min = c < -85 ? 1 : c < -80 ? 2 : c < -75 ? 3 : c < -70 ? 4 : 5;
+  const diff = s - c;
+  const d = document.getElementById("decision");
+  d.replaceChildren();
+  const t = htmlEl("strong", {}, d);
+  const p = htmlEl("p", { style: "margin:4px 0 0" }, d);
+  if (snr > 25) {
+    t.className = "st st-bad"; t.textContent = "No cambia";
+    p.textContent = `El AP actual tiene SNR ${snr} dB (con el ruido que supone Linux, -89 dBm), más de 25: "va bien". Le da igual que el otro esté ${diff > 0 ? diff + " dB mejor" : "peor"}.`;
+  } else if (diff >= min) {
+    t.className = "st st-good"; t.textContent = "Cambia de AP";
+    p.textContent = `El actual va justo (SNR ${snr} dB) y el otro es ${diff} dB mejor; con ${c} dBm le basta con ${min} dB de diferencia.`;
+  } else {
+    t.className = "st st-bad"; t.textContent = "No cambia";
+    p.textContent = `El actual va justo (SNR ${snr} dB), pero el otro solo es ${diff} dB mejor y necesita ${min} dB. (Versión simplificada: sin la estimación de velocidad.)`;
+  }
+}
+[cur, sel].forEach((e) => e.addEventListener("input", pintarDecision));
+pintarDecision();
+
+// Paseo
+const COLOR_AP = { AP1: color(1), AP2: color(2), AP3: color(3), AP4: color(4), AP5: color(5) };
+const esc = document.getElementById("esc"), metro = document.getElementById("metro");
+function pintarPaseo() {
+  const e = ESCENARIOS[esc.value];
+  const x = +metro.value;
+  document.getElementById("metro-o").textContent = x + " m";
+  const p = paseo(e.aps);
+  const mios = e.aps.filter((a) => a.mio);
+  const f = p.filas[x];
+  const st = document.getElementById("paseo-stats");
+  st.replaceChildren();
+  const tile = (l, v, dsc) => {
+    const s = htmlEl("div", { class: "stat" }, st);
+    htmlEl("div", { class: "s-l" }, s, l);
+    htmlEl("div", { class: "s-v" }, s, v);
+    htmlEl("div", { class: "s-d" }, s, dsc);
+  };
+  tile("Roaming ideal", f.mejor, fmt0(f.ideal.s) + " dBm · " + fmt0(f.ideal.real) + " Mbit/s");
+  tile("Cliente pegajoso", f.pegado, fmt0(f.peg.s) + " dBm · " + fmt0(f.peg.real) + " Mbit/s");
+  tile("Pierde el pegajoso", fmt0(f.ideal.real - f.peg.real) + " Mbit/s", f.pegado === f.mejor ? "está en el AP bueno" : "sigue en un AP lejano");
+  graficaLineas(document.getElementById("g-senales"), {
+    aria: "Señal de cada AP a lo largo del pasillo",
+    series: mios.map((a) => ({ name: a.nombre + " (canal " + a.canal + ")", color: COLOR_AP[a.nombre], data: p.filas.map((r) => [r.x, r.sen[a.nombre]]) })),
+    x: { min: 0, max: 60, label: "metro del pasillo", unit: "m" },
+    y: { min: -90, max: -10, label: "señal (dBm)", tt: (v) => fmt0(v) + " dBm" },
+    refs: [{ y: -70, label: "-70: el pegajoso empieza a buscar" }],
+    vline: { x, label: "PC · metro " + x },
+    height: 270,
+  });
+  graficaLineas(document.getElementById("g-vel"), {
+    aria: "Velocidad del roaming ideal frente al cliente pegajoso",
+    series: [
+      { name: "Ideal", color: color(1), data: p.filas.map((r) => [r.x, r.ideal.real]) },
+      { name: "Pegajoso", color: color(2), data: p.filas.map((r) => [r.x, r.peg.real]) },
+    ],
+    x: { min: 0, max: 60, label: "metro del pasillo", unit: "m" },
+    y: { min: 0, max: 90, label: "Mbit/s", tt: (v, i, k) => fmt0(v) + " Mbit/s · " + (k === 0 ? p.filas[i].mejor : p.filas[i].pegado) },
+    vline: { x }, step: true, height: 230,
+  });
+}
+esc.addEventListener("input", pintarPaseo);
+metro.addEventListener("input", pintarPaseo);
+registrar(pintarPaseo);
+let anim = null;
+document.getElementById("play").addEventListener("click", (ev) => {
+  if (anim) { clearInterval(anim); anim = null; ev.target.textContent = "▶ Pasear"; return; }
+  if (+metro.value >= 60) metro.value = 0;
+  ev.target.textContent = "⏸ Parar";
+  anim = setInterval(() => {
+    metro.value = +metro.value + 1;
+    pintarPaseo();
+    if (+metro.value >= 60) { clearInterval(anim); anim = null; ev.target.textContent = "▶ Pasear"; }
+  }, 160);
+});
+
+registrar(() => graficaBarras(document.getElementById("g-corte"), {
+  aria: "Corte típico al cambiar de AP según el tipo de red",
+  categorias: ["Red abierta", "WPA2/WPA3 con contraseña", "Con 802.11r", "WPA2-Enterprise"],
+  series: [{ name: "Corte", color: color(1), values: [30, 100, 40, 650] }],
+  y: { label: "ms", fmt: fmt0, unit: " ms" }, xLabel: "Tipo de red",
+  etiquetas: true, height: 240, resaltar: 3, rotar: window.innerWidth < 560,
+}));
+</script>
+</body>
+</html>

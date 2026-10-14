@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Señal y distancia</title>
+<meta name="description" content="Qué es un dBm, cuánta señal se pierde con la distancia y las paredes y hasta dónde llega un punto de acceso wifi.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="index.html">wifi<span>·</span>por dentro</a>
+  <nav class="topnav">
+    <a href="index.html">Inicio</a>
+    <a href="senal.html" class="active">Señal</a>
+    <a href="canales.html">Canales</a>
+    <a href="velocidad.html">Velocidad</a>
+    <a href="roaming.html">Roaming</a>
+    <a href="potencia.html">Potencia</a>
+    <a href="analizador.html">Analizador</a>
+    <a href="laboratorio.html">Laboratorio</a>
+  </nav>
+  <button id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro">◐</button>
+</div></header>
+
+<div class="layout">
+<aside class="toc"><h4>En esta página</h4><ol></ol></aside>
+<main>
+<span class="tag">1 · Señal</span>
+<h1>Señal y distancia</h1>
+<p class="lead">Un AP "grita" con una potencia y, por el camino, la señal se va debilitando. Aquí ves cuánto, por qué y hasta dónde llega.</p>
+
+<h2 id="dbm">Qué es un dBm</h2>
+<p>Las potencias de radio son muy pequeñas y muy distintas entre sí (un router emite 100 mW; tu móvil recibe 0,000001 mW). Para no manejar tantos ceros se usa una escala <strong>logarítmica</strong>: el dBm.</p>
+<div class="table-wrap"><table>
+<tr><th>dBm</th><th class="n">milivatios</th><th>Qué es</th></tr>
+<tr><td>30 dBm</td><td class="n">1.000 mW</td><td>Límite legal de algunos equipos en 5 GHz</td></tr>
+<tr><td>20 dBm</td><td class="n">100 mW</td><td>Router de casa (máximo legal en 2,4 GHz en Europa)</td></tr>
+<tr><td>15 dBm</td><td class="n">32 mW</td><td>Un móvil emitiendo</td></tr>
+<tr><td>10 dBm</td><td class="n">10 mW</td><td></td></tr>
+<tr><td>0 dBm</td><td class="n">1 mW</td><td>El punto de referencia</td></tr>
+<tr><td>-30 dBm</td><td class="n">0,001 mW</td><td>Señal con el móvil pegado al router</td></tr>
+<tr><td>-67 dBm</td><td class="n">0,0000002 mW</td><td>El mínimo para videollamadas</td></tr>
+<tr><td>-95 dBm</td><td class="n">0,0000000003 mW</td><td>El ruido de fondo del aire</td></tr>
+</table></div>
+<div class="box key"><strong>Las dos reglas de oro:</strong> +3 dB = el doble de potencia · +10 dB = diez veces más. Y al revés: -3 dB es la mitad, -10 dB la décima parte.</div>
+
+<figure class="chart">
+  <p class="ch-title">Conversor dBm → milivatios</p>
+  <div class="controls"><label>Potencia <input type="range" id="conv" min="-100" max="30" value="20" step="1"> <output id="conv-o"></output></label></div>
+  <div class="stats">
+    <div class="stat"><div class="s-l">En milivatios</div><div class="s-v" id="conv-mw"></div></div>
+    <div class="stat"><div class="s-l">Comparado con 20 dBm (router)</div><div class="s-v" id="conv-rel"></div></div>
+  </div>
+</figure>
+
+<h2 id="distancia">La señal se pierde con la distancia</h2>
+<p>Se usa el modelo <strong>log-distancia</strong>. No hay que saber logaritmos: lo importante es que <strong>cada vez que doblas la distancia pierdes lo mismo</strong> (9 dB en una casa).</p>
+<pre><code>pérdida (dB) = 40 + 10 · exponente · log10(metros) + 5 · paredes
+señal (dBm)  = potencia del AP − pérdida</code></pre>
+<div class="table-wrap"><table>
+<tr><th>Parte</th><th>Qué significa</th></tr>
+<tr><td><code>40</code></td><td>Lo que se pierde en el primer metro (en 2,4 GHz; en 5 GHz son 47)</td></tr>
+<tr><td>exponente</td><td><strong>2</strong> = campo abierto · <strong>3</strong> = casa u oficina · <strong>4</strong> = edificio lleno de obstáculos</td></tr>
+<tr><td><code>5 · paredes</code></td><td>Unos 5 dB por pared de ladrillo (hormigón: 10-15; cristal: 2-3)</td></tr>
+</table></div>
+
+<figure class="chart">
+  <p class="ch-title">Señal que llega según la distancia</p>
+  <p class="ch-sub">Mueve la potencia del AP y el número de paredes. Pasa el ratón (o el dedo) por la gráfica.</p>
+  <div class="controls">
+    <label>Potencia del AP <input type="range" id="pot" min="0" max="20" value="20"> <output id="pot-o"></output></label>
+    <label>Paredes <input type="range" id="par" min="0" max="5" value="0"> <output id="par-o"></output></label>
+  </div>
+  <div id="g-distancia"></div>
+  <figcaption>Las dos líneas horizontales son los límites que importan: -67 dBm (bueno para todo) y -85 dBm (por debajo, no hay conexión).</figcaption>
+</figure>
+
+<div class="stats" id="radios"></div>
+
+<h2 id="doblar">Cada vez que doblas la distancia</h2>
+<p>Con exponente 3 (casa), AP a 20 dBm y sin paredes:</p>
+<div class="table-wrap"><table id="t-doblar">
+<tr><th>Distancia</th><th class="n">Pérdida</th><th class="n">Señal</th><th>Calidad</th></tr>
+</table></div>
+<p>Fíjate: entre 10 y 20 m pierdes lo mismo (9 dB) que entre 50 y 100 m. Por eso, para llegar al <strong>doble</strong> de distancia tendrías que subir la potencia <strong>9 dB</strong> (¡8 veces más!). Es mucho más barato poner otro AP.</p>
+
+<h2 id="paredes">Lo que se come cada obstáculo</h2>
+<figure class="chart">
+  <p class="ch-title">Pérdida aproximada por obstáculo en 2,4 GHz (dB)</p>
+  <div id="g-obstaculos"></div>
+  <figcaption>Valores típicos; en 5 GHz son mayores. Un espejo o un frigorífico pueden "apagar" una habitación entera.</figcaption>
+</figure>
+
+<div class="box lab">En el simulador del laboratorio (<code>mac80211_hwsim</code>) no hay metros: la señal es siempre <strong>potencia − 50</strong>. Con 20 dBm se reciben -30; con 0 dBm, -50. Por eso la distancia se imita bajando la potencia, y las pérdidas de paquetes con <code>tc netem</code>.</div>
+
+<div class="next"><a href="index.html">← Inicio</a><a href="canales.html">Canales e interferencias →</a></div>
+</main>
+</div>
+
+<script>
+// Conversor
+const conv = document.getElementById("conv");
+function pintarConv() {
+  const v = +conv.value;
+  document.getElementById("conv-o").textContent = v + " dBm";
+  const mw = aMw(v);
+  document.getElementById("conv-mw").textContent = mw >= 0.01 ? fmt1(mw) + " mW" : mw.toExponential(1).replace("e", " × 10^") + " mW";
+  const rel = Math.pow(10, (v - 20) / 10);
+  document.getElementById("conv-rel").textContent = rel >= 1 ? "×" + fmt1(rel) : "1/" + fmt0(1 / rel);
+}
+conv.addEventListener("input", pintarConv);
+pintarConv();
+
+// Gráfica de distancia: 3 entornos
+const pot = document.getElementById("pot"), par = document.getElementById("par");
+const xs = []; for (let d = 1; d <= 150; d += (d < 20 ? 1 : 2)) xs.push(d);
+function pintarDistancia() {
+  const P = +pot.value, W = +par.value;
+  document.getElementById("pot-o").textContent = P + " dBm";
+  document.getElementById("par-o").textContent = W;
+  const entornos = [["Campo abierto", 2, color(1)], ["Casa / oficina", 3, color(2)], ["Edificio con obstáculos", 4, color(3)]];
+  graficaLineas(document.getElementById("g-distancia"), {
+    aria: "Señal recibida en función de la distancia para tres entornos",
+    series: entornos.map(([n, e, c]) => ({ name: n, color: c, data: xs.map((d) => [d, senal(P, d, e, W)]) })),
+    x: { min: 1, max: 150, label: "distancia (m)", unit: "m" },
+    y: { min: -110, max: -10, label: "señal (dBm)", tt: (v) => fmt0(v) + " dBm · " + calidad(v).t },
+    refs: [{ y: -67, label: "-67: bueno para todo" }, { y: -85, label: "-85: sin conexión" }],
+  });
+  const r = (u, e) => Math.pow(10, (P - u - 40 - 5 * W) / (10 * e));
+  const radios = document.getElementById("radios");
+  radios.replaceChildren();
+  [["Casa: buena señal (-67) hasta", r(-67, 3)], ["Casa: conexión (-85) hasta", r(-85, 3)], ["Campo abierto: -67 hasta", r(-67, 2)]].forEach(([l, v]) => {
+    const s = htmlEl("div", { class: "stat" }, radios);
+    htmlEl("div", { class: "s-l" }, s, l);
+    htmlEl("div", { class: "s-v" }, s, (v < 1 ? "< 1" : fmt0(v)) + " m");
+  });
+}
+pot.addEventListener("input", pintarDistancia);
+par.addEventListener("input", pintarDistancia);
+registrar(pintarDistancia);
+
+// Tabla de doblar distancia
+const t = document.getElementById("t-doblar");
+[1, 5, 10, 20, 40, 50, 80, 100, 160, 200].forEach((d) => {
+  const s = senal(20, d), q = calidad(s);
+  const tr = htmlEl("tr", {}, t);
+  htmlEl("td", {}, tr, d + " m");
+  htmlEl("td", { class: "n" }, tr, fmt0(20 - s) + " dB");
+  htmlEl("td", { class: "n" }, tr, fmt0(s) + " dBm");
+  const td = htmlEl("td", {}, tr);
+  htmlEl("span", { class: "st " + q.c }, td, q.t);
+});
+
+// Obstáculos (una sola serie: sin leyenda, el título la nombra)
+registrar(() => graficaBarras(document.getElementById("g-obstaculos"), {
+  aria: "Pérdida por obstáculo",
+  categorias: ["Cristal", "Madera", "Tabique", "Ladrillo", "Hormigón", "Espejo", "Metal"],
+  series: [{ name: "Pérdida", color: color(1), values: [2, 3, 4, 5, 12, 15, 25] }],
+  y: { label: "dB", fmt: fmt0, unit: " dB" },
+  xLabel: "Obstáculo",
+  etiquetas: true, height: 240, rotar: window.innerWidth < 560,
+}));
+</script>
+</body>
+</html>

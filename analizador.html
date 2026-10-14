@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analizadores wifi</title>
+<meta name="description" content="Los cuatro tipos de analizador wifi, cuándo hay que usar cada uno, cómo leer un escaneo y cómo elegir canal, con un ejemplo interactivo.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="index.html">wifi<span>·</span>por dentro</a>
+  <nav class="topnav">
+    <a href="index.html">Inicio</a>
+    <a href="senal.html">Señal</a>
+    <a href="canales.html">Canales</a>
+    <a href="velocidad.html">Velocidad</a>
+    <a href="roaming.html">Roaming</a>
+    <a href="potencia.html">Potencia</a>
+    <a href="analizador.html" class="active">Analizador</a>
+    <a href="laboratorio.html">Laboratorio</a>
+  </nav>
+  <button id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro">◐</button>
+</div></header>
+
+<div class="layout">
+<aside class="toc"><h4>En esta página</h4><ol></ol></aside>
+<main>
+<span class="tag">6 · Analizador</span>
+<h1>Analizadores wifi: cuándo y cómo</h1>
+<p class="lead">Antes de cambiar de canal, mover el router o comprar otro AP, <strong>mira el aire</strong>. Un analizador te dice si tu problema es de cobertura, de interferencia o de capacidad.</p>
+
+<h2 id="tipos">Los cuatro tipos</h2>
+<div class="table-wrap"><table>
+<tr><th>Tipo</th><th>Qué ve</th><th>Qué NO ve</th><th>Ejemplos</th><th>Precio</th></tr>
+<tr><td><strong>Escáner wifi</strong></td><td>Redes: nombre, BSSID, canal, señal, seguridad</td><td>Ruido que no es wifi; cuánto se usa el canal</td><td><code>nmcli</code>, <code>iw</code>, WiFiAnalyzer (Android, libre), LinSSID, inSSIDer</td><td>Gratis</td></tr>
+<tr><td><strong>Site survey</strong> (mapa de calor)</td><td>La señal punto a punto sobre el plano del edificio</td><td>Lo mismo que el escáner</td><td>Ekahau, NetSpot, Hamina, Acrylic</td><td>Gratis (básico) a miles de €</td></tr>
+<tr><td><strong>Analizador de paquetes</strong></td><td>Cada trama: reintentos, roamings, desconexiones, quién gasta el aire</td><td>Ruido que no es wifi</td><td>Wireshark o tcpdump con la tarjeta en modo monitor, Kismet</td><td>Gratis</td></tr>
+<tr><td><strong>Analizador de espectro</strong></td><td><strong>Toda</strong> la energía de radio: wifi, microondas, Bluetooth, cámaras…</td><td>Nombres de redes</td><td>Wi-Spy, RF Explorer, el <em>spectral scan</em> de algunos APs</td><td>100 € a miles</td></tr>
+</table></div>
+
+<h2 id="cuando">Cuándo hay que usar uno</h2>
+<div class="table-wrap"><table>
+<tr><th>Momento</th><th>Herramienta</th><th>Qué buscas</th></tr>
+<tr><td><strong>Antes de instalar</strong></td><td>Escáner (y survey si es grande)</td><td>Canales ocupados por vecinos, dónde poner los APs, cuántos hacen falta</td></tr>
+<tr><td><strong>Después de instalar</strong></td><td>Survey</td><td>-67 dBm en toda la zona, solape entre celdas, APs del mismo canal por debajo de -82 entre sí</td></tr>
+<tr><td>"Va lento"</td><td>Escáner + estadísticas del enlace</td><td>Señal, SNR, MCS, canal saturado, clientes lentos, reintentos</td></tr>
+<tr><td>"Se corta al moverme"</td><td>Escáner andando + paquetes</td><td>Huecos de cobertura, cliente pegajoso, roaming lento</td></tr>
+<tr><td>"Señal buena pero va fatal"</td><td><strong>Espectro</strong></td><td>Interferencia no wifi (microondas a la hora de comer, cámaras, vigilabebés)</td></tr>
+<tr><td>"Va mal a ciertas horas"</td><td>Escáner / espectro a esas horas</td><td>Vecinos, microondas, salas llenas</td></tr>
+<tr><td>Ha cambiado algo</td><td>Escáner (survey si es grave)</td><td>Obras, muebles, vecino nuevo, más usuarios</td></tr>
+<tr><td>Seguridad</td><td>Escáner / Kismet</td><td>APs con tu nombre que no son tuyos, APs piratas enchufados a tu red</td></tr>
+<tr><td>De vez en cuando</td><td>Escáner</td><td>El vecindario cambia: el canal bueno de hoy puede no serlo mañana</td></tr>
+</table></div>
+
+<h2 id="arbol">Árbol de decisión: ¿qué le pasa a mi wifi?</h2>
+<figure class="diagram">
+<svg viewBox="0 0 760 360" role="img" aria-label="Árbol de decisión: si no hay señal es problema de cobertura; si hay señal pero SNR bajo es interferencia; si el SNR es bueno es capacidad">
+  <rect x="250" y="10" width="260" height="48" rx="8" class="b"/>
+  <text x="380" y="31" text-anchor="middle">¿Hay más de -70 dBm donde va mal?</text>
+  <text x="380" y="49" text-anchor="middle" class="m">escáner / iw dev wlan0 link</text>
+  <path class="ln" d="M250 34 H130 V96 M125 88 l5 8 l5 -8"/><text x="180" y="28" class="m">no</text>
+  <rect x="20" y="98" width="220" height="70" rx="8" style="fill:var(--s2)"/>
+  <text x="130" y="122" text-anchor="middle" class="w">COBERTURA</text>
+  <text x="130" y="142" text-anchor="middle" class="w" style="font-weight:400;font-size:12px">survey · mover el AP ·</text>
+  <text x="130" y="158" text-anchor="middle" class="w" style="font-weight:400;font-size:12px">otro AP (mejor por cable)</text>
+  <path class="ln" d="M380 58 V96 M375 88 l5 8 l5 -8"/><text x="390" y="82" class="m">sí</text>
+  <rect x="250" y="98" width="260" height="48" rx="8" class="b"/>
+  <text x="380" y="119" text-anchor="middle">¿SNR &gt; 25 dB y MCS alta?</text>
+  <text x="380" y="137" text-anchor="middle" class="m">bitrate, reintentos</text>
+  <path class="ln" d="M510 122 H630 V184 M625 176 l5 8 l5 -8"/><text x="560" y="116" class="m">no</text>
+  <rect x="520" y="186" width="220" height="86" rx="8" style="fill:var(--s4)"/>
+  <text x="630" y="210" text-anchor="middle" class="w">INTERFERENCIA</text>
+  <text x="630" y="230" text-anchor="middle" class="w" style="font-weight:400;font-size:12px">escáner: ¿vecinos solapados?</text>
+  <text x="630" y="246" text-anchor="middle" class="w" style="font-weight:400;font-size:12px">si no ves nada → espectro</text>
+  <text x="630" y="262" text-anchor="middle" class="w" style="font-weight:400;font-size:12px">cambiar a 1/6/11 o a 5 GHz</text>
+  <path class="ln" d="M380 146 V184 M375 176 l5 8 l5 -8"/><text x="390" y="170" class="m">sí</text>
+  <rect x="230" y="186" width="280" height="102" rx="8" style="fill:var(--s1)"/>
+  <text x="370" y="210" text-anchor="middle" class="w">CAPACIDAD</text>
+  <text x="370" y="230" text-anchor="middle" class="w" style="font-weight:400;font-size:12px">¿muchas redes o clientes en el canal?</text>
+  <text x="370" y="246" text-anchor="middle" class="w" style="font-weight:400;font-size:12px">¿clientes lentos? ¿muchos SSIDs?</text>
+  <text x="370" y="262" text-anchor="middle" class="w" style="font-weight:400;font-size:12px">5 GHz · más APs con menos potencia</text>
+  <text x="370" y="278" text-anchor="middle" class="w" style="font-weight:400;font-size:12px">quitar velocidades lentas</text>
+  <text x="380" y="320" text-anchor="middle" class="m">Si todo esto está bien, el problema no es el wifi:</text>
+  <text x="380" y="338" text-anchor="middle" class="m">mira la conexión a internet o el propio router.</text>
+</svg>
+</figure>
+
+<h2 id="leer">Cómo se lee un escaneo (ejemplo)</h2>
+<p>Un piso típico: tu router en el canal 1 y varios vecinos. Toca los botones para cambiar tu red de canal y mira cómo cambia la interferencia.</p>
+<figure class="chart">
+  <div class="controls">
+    <label>Tu red en el canal <span class="seg" id="tu-canal">
+      <button data-c="1" class="on">1</button><button data-c="4">4</button><button data-c="6">6</button><button data-c="11">11</button>
+    </span></label>
+  </div>
+  <div id="g-escaneo"></div>
+</figure>
+<figure class="chart">
+  <p class="ch-title">Interferencia ajena en cada canal limpio (dBm, más alto = peor)</p>
+  <div id="g-interf"></div>
+  <div class="box" id="recom" style="margin:6px 0 0"></div>
+</figure>
+<div class="box key"><strong>Cuándo cambiar de canal:</strong> si el recomendado tiene <strong>6 dB o más</strong> menos de interferencia que el tuyo. Por menos, no compensa (y mañana puede ser al revés). Y si tus aparatos tienen 5 GHz, ese es el mejor "cambio de canal".</div>
+
+<h2 id="linux">Hazlo en tu Linux (solo mira, no cambia nada)</h2>
+<pre><code># Señal, frecuencia y velocidad del enlace con tu router
+iw dev wlan0 link
+# Más detalle: señal por antena, reintentos, beacons perdidos
+iw dev wlan0 station dump
+# Redes de alrededor, con canal y señal (en %), sin sudo
+nmcli -f IN-USE,SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,BARS,SECURITY dev wifi list
+# Lo mismo pasado por el analizador del laboratorio (MI_WIFI = tu red)
+nmcli -t -f SSID,BSSID,CHAN,FREQ,SIGNAL dev wifi list | python3 analizador_wifi.py MI_WIFI
+# Escaneo con la señal exacta en dBm y las velocidades básicas de cada AP
+sudo iw dev wlan0 scan | python3 analizador_wifi.py MI_WIFI
+# Site survey casero: pasea por la casa mirando la señal en directo
+watch -n 1 iw dev wlan0 link</code></pre>
+<div class="table-wrap"><table>
+<tr><th>Dato</th><th>Cómo leerlo</th></tr>
+<tr><td><code>signal: -34 [-34, -42]</code></td><td>La señal total y la de cada antena</td></tr>
+<tr><td><code>tx bitrate: 130.0 MBit/s MCS 15</code></td><td>La marcha actual: MCS 15 = 2 antenas a tope en 20 MHz</td></tr>
+<tr><td><code>tx retries</code> / <code>tx packets</code></td><td>Menos del 10 % bien; más del 20 % hay interferencia</td></tr>
+<tr><td><code>beacon loss</code></td><td>Debería ser 0</td></tr>
+<tr><td>Ocupación (<code>survey dump</code>: busy / active)</td><td>Más del 50 %: canal saturado (no todos los drivers lo dan)</td></tr>
+</table></div>
+
+<h2 id="nove">Lo que un escáner nunca te dirá</h2>
+<ul>
+  <li><strong>Ruido no wifi:</strong> no aparece como red. Solo lo intuyes (reintentos altos con buena señal) o lo ves con un analizador de espectro.</li>
+  <li><strong>Lo que oye el AP:</strong> el escáner mide lo que <em>tú</em> recibes. El AP puede oírte peor (enlace desequilibrado).</li>
+  <li><strong>Cuántos clientes hay</strong> en cada red (a veces sale en el <em>BSS Load</em>, no siempre).</li>
+  <li><strong>Redes ocultas:</strong> se ven sin nombre. Ocultar el SSID no es seguridad: el nombre aparece en cuanto alguien se conecta.</li>
+</ul>
+
+<div class="box lab">El laboratorio trae <code>analizador_wifi.py</code>, un analizador casero que lee <code>iw scan</code>, <code>wpa_cli scan_results</code> o <code>nmcli</code>, dibuja la banda de 2,4 GHz, calcula la interferencia en 1, 6 y 11, recomienda canal y avisa de redes solapadas, APs propios en el mismo canal y exceso de beacons. Funciona igual con las redes simuladas que con tu wifi real.</div>
+
+<div class="next"><a href="potencia.html">← ¿Bajar la potencia?</a><a href="laboratorio.html">El laboratorio →</a></div>
+</main>
+</div>
+
+<script>
+// Escaneo de ejemplo (datos inventados, típicos de un piso)
+const VECINOS = [
+  { nombre: "Vecino A", canal: 1, senal: -48 },
+  { nombre: "Impresora", canal: 1, senal: -69 },
+  { nombre: "Vecino B", canal: 4, senal: -62 },
+  { nombre: "Vecino C", canal: 6, senal: -65 },
+  { nombre: "Vecino D", canal: 10, senal: -72 },
+  { nombre: "Vecino E", canal: 11, senal: -52 },
+];
+let tuCanal = 1;
+function pintarEscaneo() {
+  const redes = [{ nombre: "Tu red", canal: tuCanal, senal: -40, color: color(1), mia: true }]
+    .concat(VECINOS.map((v) => Object.assign({ color: "var(--muted)", mia: false }, v)));
+  graficaEspectro(document.getElementById("g-escaneo"), redes, { height: 250 });
+  // leyenda reducida: tu red frente a vecinos
+  const leg = document.querySelector("#g-escaneo .legend");
+  if (leg) {
+    leg.replaceChildren();
+    [["Tu red", color(1)], ["Redes de vecinos (gris)", "var(--muted)"]].forEach(([n, c]) => {
+      const sp = htmlEl("span", {}, leg); const i = htmlEl("i", { class: "k-rect" }, sp); i.style.background = c; sp.appendChild(document.createTextNode(n));
+    });
+  }
+  const limpios = [1, 6, 11];
+  const vals = limpios.map((c) => interferenciaEn(c, redes));
+  graficaBarras(document.getElementById("g-interf"), {
+    aria: "Interferencia ajena en los canales 1, 6 y 11",
+    categorias: limpios.map((c) => "Canal " + c),
+    series: [{ name: "Interferencia", color: color(1), values: vals.map((v) => (v.dbm === null ? 0 : v.dbm + 100)) }],
+    y: { label: "dBm", fmt: (v) => fmt0(v - 100), max: 70 }, xLabel: "Canal",
+    etiquetas: true, height: 220, resaltar: limpios.indexOf(tuCanal) >= 0 ? limpios.indexOf(tuCanal) : undefined,
+  });
+  const mejor = limpios[vals.reduce((m, v, i) => (v.dbm < vals[m].dbm ? i : m), 0)];
+  const actual = interferenciaEn(tuCanal, redes);
+  const r = document.getElementById("recom");
+  r.replaceChildren();
+  const p1 = htmlEl("p", { style: "margin:2px 0" }, r);
+  htmlEl("span", { class: "st st-good" }, p1, "Recomendación: canal " + mejor);
+  const p2 = htmlEl("p", { style: "margin:2px 0" }, r);
+  if (![1, 6, 11].includes(tuCanal)) {
+    htmlEl("span", { class: "st st-none" }, p2, "Tu red está en el canal " + tuCanal + ": se pisa con dos canales limpios a la vez. Es lo peor.");
+  } else {
+    const dif = actual.dbm - vals[limpios.indexOf(mejor)].dbm;
+    htmlEl("span", { class: "st " + (dif >= 6 ? "st-ok" : "st-good") }, p2,
+      tuCanal === mejor ? "Ya estás en el mejor canal." : dif >= 6 ? `Cambia: el canal ${mejor} tiene ${fmt0(dif)} dB menos de interferencia.` : `No compensa cambiar: solo ${fmt0(dif)} dB de diferencia.`);
+  }
+  const p3 = htmlEl("p", { style: "margin:6px 0 0;color:var(--ink-2);font-size:.88rem" }, r);
+  p3.textContent = "Barras: cuanto más altas, más interferencia (se suman las redes ajenas que caen en ese canal, atenuadas según la separación). En el canal " + tuCanal + ": " +
+    actual.detalle.map((d) => `${d.nombre} (${d.tipo}, ${fmt0(d.ef)} dBm)`).join("; ") + ".";
+}
+document.querySelectorAll("#tu-canal button").forEach((b) => b.addEventListener("click", () => {
+  tuCanal = +b.dataset.c;
+  document.querySelectorAll("#tu-canal button").forEach((x) => x.classList.toggle("on", x === b));
+  pintarEscaneo();
+}));
+registrar(pintarEscaneo);
+</script>
+</body>
+</html>

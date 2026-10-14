@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canales e interferencias</title>
+<meta name="description" content="Por qué en wifi de 2,4 GHz se usan los canales 1, 6 y 11, la diferencia entre interferencia cocanal y de canal adyacente, y cuánta velocidad cuesta cada una.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="index.html">wifi<span>·</span>por dentro</a>
+  <nav class="topnav">
+    <a href="index.html">Inicio</a>
+    <a href="senal.html">Señal</a>
+    <a href="canales.html" class="active">Canales</a>
+    <a href="velocidad.html">Velocidad</a>
+    <a href="roaming.html">Roaming</a>
+    <a href="potencia.html">Potencia</a>
+    <a href="analizador.html">Analizador</a>
+    <a href="laboratorio.html">Laboratorio</a>
+  </nav>
+  <button id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro">◐</button>
+</div></header>
+
+<div class="layout">
+<aside class="toc"><h4>En esta página</h4><ol></ol></aside>
+<main>
+<span class="tag">2 · Canales</span>
+<h1>Canales e interferencias</h1>
+<p class="lead">El wifi de 2,4 GHz tiene 13 canales... pero solo caben 3 redes sin pisarse. Aquí ves por qué, qué pasa cuando se pisan y por qué "ponerse en medio" es el peor error.</p>
+
+<h2 id="anchura">Los canales están más juntos que lo que ocupa una red</h2>
+<p>Cada canal está a <strong>5 MHz</strong> del siguiente, pero una red wifi ocupa <strong>22 MHz</strong>: pisa <strong>2 canales a cada lado</strong>. Para no tocarse, dos redes tienen que estar a <strong>5 canales</strong> de distancia. En la banda solo caben así tres: <strong>1, 6 y 11</strong>.</p>
+<figure class="chart">
+  <p class="ch-title">Las tres redes que caben sin tocarse</p>
+  <div id="g-limpios"></div>
+</figure>
+<p>Fórmula para pasar de canal a frecuencia: <code>frecuencia (MHz) = 2407 + 5 × canal</code>. Canal 1 = 2412, canal 6 = 2437, canal 11 = 2462.</p>
+
+<h2 id="pruebalo">Pruébalo: tu red y la del vecino</h2>
+<figure class="chart">
+  <p class="ch-title">¿Os pisáis?</p>
+  <p class="ch-sub">Elige el canal de tu red, el del vecino y con cuánta fuerza llega su señal a tu casa.</p>
+  <div class="controls">
+    <label>Tu canal <select id="c-tu"></select></label>
+    <label>Canal del vecino <select id="c-vec"></select></label>
+    <label>Señal del vecino <input type="range" id="s-vec" min="-90" max="-40" value="-60"> <output id="s-vec-o"></output></label>
+  </div>
+  <div id="g-prueba"></div>
+  <div class="box" id="veredicto" style="margin-bottom:4px"></div>
+</figure>
+
+<h2 id="tipos">Los tres tipos de interferencia</h2>
+<p>El wifi funciona como una <strong>reunión educada</strong>: antes de hablar, escuchas. Si alguien está hablando, esperas tu turno (esto se llama CSMA/CA). El problema es <em>a quién</em> eres capaz de oír.</p>
+<figure class="diagram">
+<svg viewBox="0 0 760 250" role="img" aria-label="Comparación de interferencia cocanal, que provoca turnos, e interferencia de canal adyacente, que provoca choques">
+  <text x="190" y="24" text-anchor="middle" style="font-weight:700">Mismo canal (cocanal)</text>
+  <text x="570" y="24" text-anchor="middle" style="font-weight:700">Canal solapado (adyacente)</text>
+  <rect x="40" y="50" width="100" height="40" rx="6" style="fill:var(--s1)"/><text x="90" y="75" text-anchor="middle" class="w">Tú · c1</text>
+  <rect x="240" y="50" width="100" height="40" rx="6" style="fill:var(--s4)"/><text x="290" y="75" text-anchor="middle" class="w">Vecino · c1</text>
+  <text x="190" y="66" text-anchor="middle" class="m">"te entiendo"</text>
+  <path class="ln" d="M145 72 H235"/>
+  <rect x="40" y="120" width="300" height="26" rx="4" class="b"/>
+  <rect x="40" y="120" width="70" height="26" rx="4" style="fill:var(--s1)"/>
+  <rect x="112" y="120" width="70" height="26" rx="4" style="fill:var(--s4)"/>
+  <rect x="184" y="120" width="70" height="26" rx="4" style="fill:var(--s1)"/>
+  <rect x="256" y="120" width="70" height="26" rx="4" style="fill:var(--s4)"/>
+  <text x="190" y="168" text-anchor="middle" class="m">tiempo →  hablan por turnos</text>
+  <text x="190" y="200" text-anchor="middle">✔ No chocan</text>
+  <text x="190" y="222" text-anchor="middle">✘ Cada uno tiene la mitad del aire</text>
+
+  <rect x="420" y="50" width="100" height="40" rx="6" style="fill:var(--s1)"/><text x="470" y="75" text-anchor="middle" class="w">Tú · c1</text>
+  <rect x="620" y="50" width="100" height="40" rx="6" style="fill:var(--s4)"/><text x="670" y="75" text-anchor="middle" class="w">Vecino · c3</text>
+  <text x="570" y="66" text-anchor="middle" class="m">"solo oigo ruido"</text>
+  <path class="ln-s" d="M525 72 H615"/>
+  <rect x="420" y="120" width="300" height="26" rx="4" class="b"/>
+  <rect x="420" y="120" width="140" height="12" rx="3" style="fill:var(--s1)"/>
+  <rect x="500" y="134" width="150" height="12" rx="3" style="fill:var(--s4)"/>
+  <text x="530" y="113" text-anchor="middle" style="font-weight:700;fill:var(--critical)">¡choque!</text>
+  <text x="570" y="168" text-anchor="middle" class="m">tiempo →  hablan a la vez</text>
+  <text x="570" y="200" text-anchor="middle">✘ Chocan: reintentos y ruido</text>
+  <text x="570" y="222" text-anchor="middle">✘ Baja el SNR → baja la velocidad</text>
+</svg>
+</figure>
+<div class="table-wrap"><table>
+<tr><th>Tipo</th><th>Qué pasa</th><th>Gravedad</th></tr>
+<tr><td><strong>Cocanal</strong> (mismo canal)</td><td>Tu tarjeta entiende al otro a partir de <strong>-82 dBm</strong> y espera su turno. Os repartís el tiempo de aire.</td><td><span class="st st-ok">Media</span></td></tr>
+<tr><td><strong>Canal adyacente</strong> (solapado)</td><td>Tu tarjeta no lo entiende: solo oye ruido. No espera hasta que el ruido pasa de <strong>-62 dBm</strong>, así que habláis a la vez y chocáis.</td><td><span class="st st-none">La peor</span></td></tr>
+<tr><td><strong>No wifi</strong></td><td>Microondas (≈ canales 8-11), Bluetooth, cámaras, vigilabebés. Ruido puro que ningún escáner wifi ve como "red".</td><td><span class="st st-bad">Variable</span></td></tr>
+</table></div>
+<div class="box key"><strong>Conclusión:</strong> es mejor compartir canal con el vecino (los dos en el 6) que ponerte "en medio" (tú en el 4 y él en el 6) para "estar solo".</div>
+
+<h3>Cuánto se nota una red según los canales de separación</h3>
+<figure class="chart">
+  <p class="ch-title">Atenuación de una red vecina según la separación de canales</p>
+  <div id="g-atenuacion"></div>
+  <figcaption>Una red a 1 canal se nota casi entera (-1 dB). A 5 canales o más, nada. Valores aproximados de los factores de solapamiento publicados (Mishra et al.).</figcaption>
+</figure>
+
+<h2 id="coste">Lo que cuesta en velocidad</h2>
+<p>En el pasillo de 60 m con 3 APs a 20 dBm, el modelo calcula la velocidad real de un cliente en cada metro. Compara el plan bueno (1-6-11) con los dos malos:</p>
+<figure class="chart">
+  <p class="ch-title">Velocidad real de un cliente a lo largo del pasillo (Mbit/s)</p>
+  <p class="ch-sub">Roaming ideal: el cliente siempre está en el AP que mejor oye.</p>
+  <div id="g-pasillo"></div>
+  <figcaption>Con todo en el canal 1, la señal es perfecta pero los tres APs se reparten el aire: un tercio de velocidad en todas partes. Con 1-3-6 hay zonas buenas y zonas hundidas: donde el AP vecino se oye "un poco", su ruido tapa tu señal.</figcaption>
+</figure>
+<figure class="chart">
+  <p class="ch-title">Capacidad total del pasillo (Mbit/s, todos los APs trabajando a la vez)</p>
+  <div id="g-capacidad"></div>
+</figure>
+
+<h2 id="cinco">¿Y en 5 GHz?</h2>
+<div class="table-wrap"><table>
+<tr><th></th><th>2,4 GHz</th><th>5 GHz</th></tr>
+<tr><td>Canales de 20 MHz que no se pisan</td><td>3</td><td>más de 20</td></tr>
+<tr><td>Pérdida en el primer metro</td><td>40 dB</td><td>47 dB</td></tr>
+<tr><td>Alcance</td><td>Mayor</td><td>Menor (y las paredes quitan más)</td></tr>
+<tr><td>Microondas, Bluetooth</td><td>Sí molestan</td><td>No</td></tr>
+<tr><td>Cuándo usarlo</td><td>Lejos del AP, aparatos viejos o de domótica</td><td>Siempre que el aparato lo soporte</td></tr>
+</table></div>
+
+<div class="box lab">El simulador solo entrega tramas entre radios del <strong>mismo canal exacto</strong>: no simula el solapamiento ni que el aire se llene. Por eso en el laboratorio el problema se <strong>ve</strong> con el analizador (<code>analizador_wifi.py</code>) y se <strong>mide</strong> con <code>mapa_aps.py</code>. Los APs se cambian de canal en caliente, sin desconectar al PC, con <code>hostapd_cli chan_switch 5 2437 ht</code> (CSA, <em>Channel Switch Announcement</em>).</div>
+
+<div class="next"><a href="senal.html">← Señal y distancia</a><a href="velocidad.html">Señal y velocidad →</a></div>
+</main>
+</div>
+
+<script>
+registrar(() => graficaEspectro(document.getElementById("g-limpios"), [
+  { nombre: "Canal 1", canal: 1, senal: -40, color: color(1) },
+  { nombre: "Canal 6", canal: 6, senal: -40, color: color(2) },
+  { nombre: "Canal 11", canal: 11, senal: -40, color: color(3) },
+], { height: 220 }));
+
+// Prueba interactiva
+const sTu = document.getElementById("c-tu"), sVec = document.getElementById("c-vec"), sSen = document.getElementById("s-vec");
+for (let c = 1; c <= 13; c++) {
+  htmlEl("option", { value: c }, sTu, c + " (" + freqDe(c) + " MHz)");
+  htmlEl("option", { value: c }, sVec, c + " (" + freqDe(c) + " MHz)");
+}
+sTu.value = 1; sVec.value = 3;
+function pintarPrueba() {
+  const tu = +sTu.value, vec = +sVec.value, sv = +sSen.value;
+  document.getElementById("s-vec-o").textContent = sv + " dBm";
+  graficaEspectro(document.getElementById("g-prueba"), [
+    { nombre: "Tu red", canal: tu, senal: -45, color: color(1) },
+    { nombre: "Vecino", canal: vec, senal: sv, color: color(4) },
+  ], { height: 230 });
+  const sep = Math.abs(tu - vec);
+  const v = document.getElementById("veredicto");
+  v.replaceChildren();
+  const tit = htmlEl("strong", {}, v);
+  const txt = htmlEl("p", { style: "margin:4px 0 0" }, v);
+  if (sep >= 5) {
+    tit.className = "st st-good"; tit.textContent = "No os pisáis (" + sep + " canales de separación)";
+    txt.textContent = "Cada red tiene su trozo de banda. Da igual lo fuerte que llegue el vecino.";
+  } else if (sep === 0) {
+    const turnos = sv >= -82;
+    tit.className = "st " + (turnos ? "st-ok" : "st-good");
+    tit.textContent = turnos ? "Mismo canal: os turnáis" : "Mismo canal, pero no os oís";
+    txt.textContent = turnos
+      ? "Le oyes a " + sv + " dBm (más fuerte que -82): esperáis turnos. No chocáis, pero si los dos transmitís mucho, cada uno tiene la mitad del aire."
+      : "Llega a " + sv + " dBm, por debajo de -82: no le oyes lo bastante para esperar. Solo suma un poco de ruido.";
+  } else {
+    const ef = sv - MODELO.ATENUACION_CANAL[sep];
+    const ruido = aDbm(aMw(MODELO.RUIDO) + aMw(ef));
+    const sinr = -60 - ruido;
+    const espera = ef >= MODELO.CCA_ENERGIA;
+    tit.className = "st st-none";
+    tit.textContent = "Canales solapados: " + sep + " de separación (se nota " + fmt0(ef) + " dBm)";
+    txt.textContent = espera
+      ? "Se nota tan fuerte (más de -62 dBm) que tu tarjeta lo detecta como energía y espera: os repartís el aire, como en el mismo canal, pero sin entenderos."
+      : "Tu tarjeta no lo entiende y no espera: lo oye como ruido. El ruido sube de -95 a " + fmt0(ruido) + " dBm. Un móvil a -60 dBm pasa de SNR 35 dB a " + fmt0(sinr) + " dB" +
+        (elegirMcs(sinr) ? " (" + elegirMcs(sinr).mbps + " Mbit/s de enlace en vez de 130)." : " (¡sin enlace!).") +
+        " Solución: poneros los dos en 1, 6 u 11.";
+  }
+}
+[sTu, sVec, sSen].forEach((e) => e.addEventListener("input", pintarPrueba));
+registrar(pintarPrueba);
+
+registrar(() => graficaBarras(document.getElementById("g-atenuacion"), {
+  aria: "Atenuación por separación de canales",
+  categorias: ["0", "1", "2", "3", "4", "5+"],
+  series: [{ name: "Cuánto se atenúa", color: color(1), values: [0, 1, 6, 14, 23, 31] }],
+  y: { label: "dB menos", fmt: fmt0, unit: " dB" }, xLabel: "Canales de separación",
+  etiquetas: true, height: 220,
+}));
+
+// Velocidad a lo largo del pasillo: A, B, C
+registrar(() => {
+  const ps = { A: paseo(ESCENARIOS.A.aps), B: paseo(ESCENARIOS.B.aps), C: paseo(ESCENARIOS.C.aps) };
+  graficaLineas(document.getElementById("g-pasillo"), {
+    aria: "Velocidad real a lo largo del pasillo para tres planes de canales",
+    series: [
+      { name: "1-6-11", color: color(1), data: ps.A.filas.map((f) => [f.x, f.ideal.real]) },
+      { name: "Todos en 1", color: color(2), data: ps.B.filas.map((f) => [f.x, f.ideal.real]) },
+      { name: "1-3-6", color: color(3), data: ps.C.filas.map((f) => [f.x, f.ideal.real]) },
+    ],
+    x: { min: 0, max: 60, label: "metro del pasillo", unit: "m" },
+    y: { min: 0, max: 90, label: "Mbit/s", tt: (v) => fmt0(v) + " Mbit/s" },
+    step: true, height: 280,
+  });
+  const esc = ["A", "B", "C", "H"];
+  graficaBarras(document.getElementById("g-capacidad"), {
+    aria: "Capacidad total según el plan de canales",
+    categorias: ["1-6-11", "Todos en 1", "1-3-6", "1-6-11 + vecino en 3"],
+    series: [{ name: "Capacidad", color: color(1), values: esc.map((e) => paseo(ESCENARIOS[e].aps, 5).capacidad) }],
+    y: { label: "Mbit/s", fmt: fmt0, unit: " Mbit/s" }, xLabel: "Plan de canales",
+    etiquetas: true, height: 240, resaltar: 0, rotar: window.innerWidth < 560,
+  });
+});
+</script>
+</body>
+</html>

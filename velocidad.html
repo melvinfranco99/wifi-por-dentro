@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Señal y velocidad</title>
+<meta name="description" content="Cómo se convierte la señal wifi en velocidad: SNR, MCS, por qué más señal no siempre es más rápido, el cliente lento y el tiempo de aire de los beacons.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="index.html">wifi<span>·</span>por dentro</a>
+  <nav class="topnav">
+    <a href="index.html">Inicio</a>
+    <a href="senal.html">Señal</a>
+    <a href="canales.html">Canales</a>
+    <a href="velocidad.html" class="active">Velocidad</a>
+    <a href="roaming.html">Roaming</a>
+    <a href="potencia.html">Potencia</a>
+    <a href="analizador.html">Analizador</a>
+    <a href="laboratorio.html">Laboratorio</a>
+  </nav>
+  <button id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro">◐</button>
+</div></header>
+
+<div class="layout">
+<aside class="toc"><h4>En esta página</h4><ol></ol></aside>
+<main>
+<span class="tag">3 · Velocidad</span>
+<h1>Señal y velocidad</h1>
+<p class="lead">"Tengo todas las rayitas y va lento." Aquí está el porqué: la velocidad no depende de la señal, sino de cuánto destaca sobre el ruido, y de con cuántos compartes el aire.</p>
+
+<h2 id="snr">SNR: lo que de verdad importa</h2>
+<p>Imagina que hablas en una sala. Lo que importa no es lo alto que hablas, sino <strong>cuánto más alto que el ruido de la sala</strong>. Eso es el <strong>SNR</strong> (relación señal/ruido):</p>
+<figure class="diagram">
+<svg viewBox="0 0 760 230" role="img" aria-label="La señal a -60 dBm está 35 dB por encima del ruido de -95 dBm; con interferencia el ruido sube a -75 y el SNR baja a 15 dB">
+  <text x="190" y="22" text-anchor="middle" style="font-weight:700">Aire limpio</text>
+  <text x="570" y="22" text-anchor="middle" style="font-weight:700">Con interferencia</text>
+  <line x1="60" y1="60" x2="320" y2="60" style="stroke:var(--s1);stroke-width:3"/>
+  <text x="60" y="52" class="m">Señal: -60 dBm</text>
+  <rect x="60" y="180" width="260" height="20" rx="3" style="fill:var(--muted);opacity:.35"/>
+  <text x="60" y="216" class="m">Ruido: -95 dBm</text>
+  <path class="ln" d="M190 66 V176 M184 74 l6 -8 l6 8 M184 168 l6 8 l6 -8"/>
+  <text x="200" y="126" style="font-weight:700">SNR 35 dB → 130 Mbit/s</text>
+  <line x1="440" y1="60" x2="700" y2="60" style="stroke:var(--s1);stroke-width:3"/>
+  <text x="440" y="52" class="m">Señal: -60 dBm (¡la misma!)</text>
+  <rect x="440" y="116" width="260" height="84" rx="3" style="fill:var(--s4);opacity:.35"/>
+  <text x="440" y="216" class="m">Ruido + vecino solapado: -75 dBm</text>
+  <path class="ln" d="M570 66 V112 M564 74 l6 -8 l6 8 M564 104 l6 8 l6 -8"/>
+  <text x="580" y="94" style="font-weight:700">SNR 15 dB → 26 Mbit/s</text>
+</svg>
+</figure>
+
+<h2 id="mcs">De SNR a velocidad: la "marcha" (MCS)</h2>
+<p>La tarjeta elige la marcha más rápida que aguanta su SNR. Si el SNR es alto, mete más información en cada símbolo (64-QAM); si es bajo, va a lo seguro (BPSK). Esto es wifi 4 con 2 antenas y canal de 20 MHz, lo típico en 2,4 GHz:</p>
+<figure class="chart">
+  <p class="ch-title">Velocidad real según la señal que recibes</p>
+  <p class="ch-sub">Sube el ruido para ver qué hace un vecino en un canal solapado.</p>
+  <div class="controls">
+    <label>Ruido + interferencias <input type="range" id="ruido" min="-95" max="-65" value="-80"> <output id="ruido-o"></output></label>
+  </div>
+  <div id="g-mcs"></div>
+  <figcaption>La velocidad va a escalones. Por encima de la señal en que se alcanza el máximo, <strong>más señal no da más velocidad</strong>. Con interferencia, toda la curva se mueve a la derecha: necesitas más señal para lo mismo.</figcaption>
+</figure>
+<div class="table-wrap"><table>
+<tr><th>MCS (2 antenas)</th><th>Modulación</th><th class="n">SNR mínimo</th><th class="n">Señal (ruido -95)</th><th class="n">Enlace</th><th class="n">Real (~60 %)</th></tr>
+<tr><td>MCS 15</td><td>64-QAM 5/6</td><td class="n">30 dB</td><td class="n">-65 dBm</td><td class="n">130</td><td class="n">78</td></tr>
+<tr><td>MCS 14</td><td>64-QAM 3/4</td><td class="n">28 dB</td><td class="n">-67 dBm</td><td class="n">117</td><td class="n">70</td></tr>
+<tr><td>MCS 13</td><td>64-QAM 2/3</td><td class="n">26 dB</td><td class="n">-69 dBm</td><td class="n">104</td><td class="n">62</td></tr>
+<tr><td>MCS 12</td><td>16-QAM 3/4</td><td class="n">22 dB</td><td class="n">-73 dBm</td><td class="n">78</td><td class="n">47</td></tr>
+<tr><td>MCS 11</td><td>16-QAM 1/2</td><td class="n">19 dB</td><td class="n">-76 dBm</td><td class="n">52</td><td class="n">31</td></tr>
+<tr><td>MCS 10</td><td>QPSK 3/4</td><td class="n">16 dB</td><td class="n">-79 dBm</td><td class="n">39</td><td class="n">23</td></tr>
+<tr><td>MCS 9</td><td>QPSK 1/2</td><td class="n">13 dB</td><td class="n">-82 dBm</td><td class="n">26</td><td class="n">16</td></tr>
+<tr><td>MCS 8</td><td>BPSK 1/2</td><td class="n">10 dB</td><td class="n">-85 dBm</td><td class="n">13</td><td class="n">8</td></tr>
+</table></div>
+<div class="box key"><strong>¿Por qué solo el 60 %?</strong> El wifi es <em>semidúplex</em> (o hablas o escuchas, nunca las dos), cada paquete lleva cabeceras, hay que esperar turno y confirmar cada envío (ACK). Y ese 60 % se reparte entre todos los aparatos conectados al AP.</div>
+
+<h2 id="lento">El cliente lento: uno frena a todos</h2>
+<p>El tiempo de aire es como una carretera de un carril. Un móvil en el jardín a MCS 8 tarda 10 veces más en mandar lo mismo que uno junto al router. Con el reparto clásico (todos mandan el mismo número de paquetes) <strong>el lento marca el ritmo de todos</strong>. Los APs modernos reparten <strong>tiempo</strong> en vez de paquetes (<em>airtime fairness</em>).</p>
+<figure class="chart">
+  <p class="ch-title">Tres móviles cerca (60 Mbit/s) y uno lejos</p>
+  <div class="controls"><label>Velocidad del móvil lejano <input type="range" id="v-lento" min="1" max="60" value="4"> <output id="v-lento-o"></output></label></div>
+  <div id="g-lento"></div>
+  <div class="stats" id="lento-stats"></div>
+</figure>
+
+<h2 id="beacons">El aire que se comen los anuncios (beacons)</h2>
+<p>Cada red manda unos 10 "anuncios" por segundo (beacons) para que los aparatos la vean, aunque nadie la use. Por defecto en 2,4 GHz van a <strong>1 Mbit/s</strong>, la velocidad más lenta de 1999. Con muchas redes en el mismo canal, se nota:</p>
+<figure class="chart">
+  <p class="ch-title">Tiempo del canal ocupado solo por beacons</p>
+  <div class="controls"><label>Redes (SSIDs) que se oyen en el canal <input type="range" id="ssids" min="1" max="20" value="12"> <output id="ssids-o"></output></label></div>
+  <div id="g-beacons"></div>
+  <figcaption>Cuenta: beacon de 300 bytes cada 102,4 ms. A 1 Mbit/s tarda 2,6 ms; a 12 Mbit/s, 0,2 ms. Por eso se recomienda tener pocos SSIDs y quitar las velocidades de 802.11b (1, 2, 5,5 y 11).</figcaption>
+</figure>
+
+<h2 id="asimetrico">El enlace desequilibrado</h2>
+<p>La pérdida por distancia es <strong>la misma en los dos sentidos</strong>. Pero el router emite a 20 dBm y un móvil a 10-15 dBm. Resultado: el móvil "ve" el wifi, pero el router no le oye a él.</p>
+<figure class="diagram">
+<svg viewBox="0 0 760 190" role="img" aria-label="A 50 metros con 2 paredes la pérdida es de 101 dB: el móvil recibe al router a -81 dBm pero el router recibe al móvil a -91 dBm, por debajo del límite">
+  <rect x="30" y="60" width="130" height="60" rx="8" style="fill:var(--s1)"/>
+  <text x="95" y="86" text-anchor="middle" class="w">Router</text>
+  <text x="95" y="106" text-anchor="middle" class="w">emite 20 dBm</text>
+  <rect x="600" y="60" width="130" height="60" rx="8" style="fill:var(--s2)"/>
+  <text x="665" y="86" text-anchor="middle" class="w">Móvil</text>
+  <text x="665" y="106" text-anchor="middle" class="w">emite 10 dBm</text>
+  <path class="ln" d="M170 74 H590 M582 69 l8 5 l-8 5"/>
+  <text x="380" y="66" text-anchor="middle">20 − 101 = <tspan style="font-weight:700">-81 dBm</tspan> ✔ el móvil enseña una rayita</text>
+  <path class="ln" d="M590 106 H170 M178 101 l-8 5 l8 5"/>
+  <text x="380" y="132" text-anchor="middle">10 − 101 = <tspan style="font-weight:700">-91 dBm</tspan> ✘ el router no le oye (&lt; -85)</text>
+  <text x="380" y="172" text-anchor="middle" class="m">50 m y 2 paredes: pérdida = 40 + 30·log10(50) + 10 = 101 dB en los dos sentidos</text>
+</svg>
+</figure>
+<div class="box key"><strong>Regla:</strong> la potencia del AP, parecida a la de los clientes (como mucho 3-6 dB más). Si el AP "grita" mucho, los móviles se quedan enganchados en zonas donde no pueden contestar.</div>
+
+<div class="box lab">En el simulador la señal nunca baja de -50 dBm, así que la velocidad del enlace (<code>iw dev wifi_pc link</code> → <code>tx bitrate</code>) siempre sale al máximo: <strong>bajar la potencia del AP baja la señal pero no la velocidad</strong>. El cliente lento se fuerza con <code>iw dev wifi_pc set bitrates legacy-2.4 6 ht-mcs-2.4 0</code>, y el desequilibrio se ve bajando la potencia del PC y mirando <code>station dump</code> en el AP.</div>
+
+<div class="next"><a href="canales.html">← Canales e interferencias</a><a href="roaming.html">Roaming →</a></div>
+</main>
+</div>
+
+<script>
+// MCS: velocidad real en función de la señal, aire limpio frente a interferencia
+const ruido = document.getElementById("ruido");
+const senales = []; for (let s = -95; s <= -30; s += 0.5) senales.push(s);
+const real = (s, n) => { const m = elegirMcs(s - n); return m ? m.mbps * MODELO.EFICIENCIA : 0; };
+function pintarMcs() {
+  const n = +ruido.value;
+  document.getElementById("ruido-o").textContent = n + " dBm";
+  graficaLineas(document.getElementById("g-mcs"), {
+    aria: "Velocidad real en función de la señal recibida",
+    series: [
+      { name: "Aire limpio (-95)", color: color(1), data: senales.map((s) => [s, real(s, -95)]) },
+      { name: "Con interferencia (" + n + ")", color: color(2), data: senales.map((s) => [s, real(s, n)]) },
+    ],
+    x: { min: -95, max: -30, label: "señal recibida (dBm)", tt: (v) => v + " dBm" },
+    y: { min: 0, max: 90, label: "Mbit/s reales", tt: (v) => fmt0(v) + " Mbit/s" },
+    step: true, height: 290,
+  });
+}
+ruido.addEventListener("input", pintarMcs);
+registrar(pintarMcs);
+
+// Cliente lento
+const lento = document.getElementById("v-lento");
+function pintarLento() {
+  const v = +lento.value;
+  document.getElementById("v-lento-o").textContent = v + " Mbit/s";
+  const vel = [60, 60, 60, v];
+  const paquetes = 1 / vel.reduce((a, b) => a + 1 / b, 0);
+  const tiempo = vel.map((x) => x / vel.length);
+  graficaBarras(document.getElementById("g-lento"), {
+    aria: "Velocidad de cada móvil con reparto por paquetes y por tiempo de aire",
+    categorias: ["Móvil 1", "Móvil 2", "Móvil 3", "Jardín"],
+    series: [
+      { name: "Reparto por paquetes (clásico)", color: color(2), values: vel.map(() => paquetes) },
+      { name: "Reparto por tiempo de aire", color: color(1), values: tiempo },
+    ],
+    y: { label: "Mbit/s", fmt: fmt1, unit: " Mbit/s", max: 18 }, xLabel: "Móvil", height: 240,
+  });
+  const st = document.getElementById("lento-stats");
+  st.replaceChildren();
+  [["Cada uno, sin el lento", fmt1(60 / 3) + " Mbit/s"], ["Cada uno, por paquetes", fmt1(paquetes) + " Mbit/s"], ["Total por paquetes", fmt1(paquetes * 4) + " Mbit/s"], ["Total por tiempo de aire", fmt1(tiempo.reduce((a, b) => a + b, 0)) + " Mbit/s"]].forEach(([l, val]) => {
+    const s = htmlEl("div", { class: "stat" }, st);
+    htmlEl("div", { class: "s-l" }, s, l);
+    htmlEl("div", { class: "s-v" }, s, val);
+  });
+}
+lento.addEventListener("input", pintarLento);
+registrar(pintarLento);
+
+// Beacons
+const ssids = document.getElementById("ssids");
+function pintarBeacons() {
+  const n = +ssids.value;
+  document.getElementById("ssids-o").textContent = n;
+  const tasas = [1, 6, 12, 24];
+  const pct = tasas.map((r) => (n * ((r < 6 ? 192 : 20) + (300 * 8) / r)) / 102400 * 100);
+  graficaBarras(document.getElementById("g-beacons"), {
+    aria: "Porcentaje del canal ocupado por beacons según su velocidad",
+    categorias: ["1 Mbit/s (por defecto)", "6 Mbit/s", "12 Mbit/s", "24 Mbit/s"],
+    series: [{ name: "Ocupación", color: color(1), values: pct }],
+    y: { label: "% del tiempo", fmt: fmt1, unit: " %", max: Math.max(10, pct[0] * 1.2) }, xLabel: "Velocidad de los beacons",
+    etiquetas: true, height: 230, resaltar: 0, rotar: window.innerWidth < 560,
+  });
+}
+ssids.addEventListener("input", pintarBeacons);
+registrar(pintarBeacons);
+</script>
+</body>
+</html>

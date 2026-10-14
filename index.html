@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wifi por dentro</title>
+<meta name="description" content="Aprende cómo funciona el wifi con varios puntos de acceso: señal, canales, interferencias, velocidad, roaming, potencia y analizadores wifi. Con gráficas interactivas y un laboratorio en Linux.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="index.html">wifi<span>·</span>por dentro</a>
+  <nav class="topnav">
+    <a href="index.html" class="active">Inicio</a>
+    <a href="senal.html">Señal</a>
+    <a href="canales.html">Canales</a>
+    <a href="velocidad.html">Velocidad</a>
+    <a href="roaming.html">Roaming</a>
+    <a href="potencia.html">Potencia</a>
+    <a href="analizador.html">Analizador</a>
+    <a href="laboratorio.html">Laboratorio</a>
+  </nav>
+  <button id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro">◐</button>
+</div></header>
+
+<div class="layout">
+<aside class="toc"><h4>En esta página</h4><ol></ol></aside>
+<main>
+<span class="tag">Introducción</span>
+<h1>Wifi por dentro: puntos de acceso, interferencias y roaming</h1>
+<p class="lead">Por qué tu wifi va lento aunque tengas "todas las rayitas", por qué poner más routers a veces lo empeora, cuándo tu móvil cambia de punto de acceso y cuándo hace falta un analizador wifi. Explicado con números, gráficas que puedes tocar y un laboratorio en Linux.</p>
+
+<h2 id="dbm">La única unidad que necesitas: el dBm</h2>
+<p>La señal wifi se mide en <strong>dBm</strong>. Son números <strong>negativos</strong>: cuanto más cerca de cero, mejor. Esta es la escala que vas a ver en toda la web:</p>
+<div class="dbm-scale" role="img" aria-label="Escala de calidad de señal en dBm">
+  <div style="background:#0a7d0a">-30 a -60<small>Excelente</small></div>
+  <div style="background:#2f8f2f">-60 a -67<small>Muy buena</small></div>
+  <div style="background:#9a6a00">-67 a -70<small>Buena</small></div>
+  <div style="background:#b4572f">-70 a -80<small>Débil</small></div>
+  <div style="background:#a8402b">-80 a -85<small>Al límite</small></div>
+  <div style="background:#9b2c2c">menos de -85<small>Sin cobertura</small></div>
+</div>
+<p style="color:var(--ink-2);font-size:.9rem">Cada <strong>3 dB</strong> es el doble (o la mitad) de potencia; cada <strong>10 dB</strong>, diez veces. Pasar de -50 a -60 dBm es recibir <strong>10 veces menos</strong> señal.</p>
+
+<h2 id="idea">La idea en 30 segundos</h2>
+<div class="two">
+  <div class="box key"><strong>1. Más señal ≠ más velocidad.</strong> Por encima de unos -65 dBm ya vas a la máxima velocidad. Tener -30 o -60 da lo mismo.</div>
+  <div class="box key"><strong>2. El aire se comparte.</strong> Todos los aparatos y routers que usan el mismo canal hablan <em>por turnos</em>. Tres routers en el mismo canal valen lo mismo que uno.</div>
+  <div class="box key"><strong>3. Canales 1, 6 y 11.</strong> En 2,4 GHz solo hay tres canales que no se pisan. Ponerse "en medio" (3, 4, 8, 9) es lo peor.</div>
+  <div class="box key"><strong>4. Decide el móvil.</strong> Es el cliente quien cambia de punto de acceso, y suele ser "pegajoso". El router solo puede empujarle.</div>
+  <div class="box key"><strong>5. Bajar potencia no da más señal a nadie</strong>, pero con varios puntos de acceso hace que la red entera vaya más rápida.</div>
+  <div class="box key"><strong>6. Mira antes de tocar.</strong> Un analizador wifi te dice qué canal usar y si el problema es de cobertura, de interferencia o de capacidad.</div>
+</div>
+
+<h2 id="escenario">El escenario que usamos en toda la web</h2>
+<p>Un pasillo de 60 metros con <strong>tres puntos de acceso</strong> (AP) con el mismo nombre de red, conectados por cable al mismo router, un PC que se pasea y el router de un vecino mal configurado.</p>
+<figure class="diagram">
+<svg viewBox="0 0 760 300" role="img" aria-label="Pasillo de 60 metros con AP1 en el metro 0 canal 1, AP2 en el metro 30 canal 6, AP3 en el metro 60 canal 11, router del vecino en el metro 15 canal 3 y un PC que se mueve">
+  <rect x="300" y="14" width="160" height="40" rx="8" class="b"/>
+  <text x="380" y="39" text-anchor="middle">Router / switch</text>
+  <path class="ln" d="M380 54 V80 M100 80 H660 M100 80 V112 M380 80 V112 M660 80 V112"/>
+  <text x="520" y="74" class="m">cable</text>
+  <rect x="40" y="112" width="120" height="52" rx="8" style="fill:var(--s1)"/>
+  <text x="100" y="134" text-anchor="middle" class="w">AP1</text>
+  <text x="100" y="152" text-anchor="middle" class="w">canal 1</text>
+  <rect x="320" y="112" width="120" height="52" rx="8" style="fill:var(--s2)"/>
+  <text x="380" y="134" text-anchor="middle" class="w">AP2</text>
+  <text x="380" y="152" text-anchor="middle" class="w">canal 6</text>
+  <rect x="600" y="112" width="120" height="52" rx="8" style="fill:var(--s3)"/>
+  <text x="660" y="134" text-anchor="middle" class="w">AP3</text>
+  <text x="660" y="152" text-anchor="middle" class="w">canal 11</text>
+  <rect x="190" y="112" width="100" height="52" rx="8" style="fill:var(--s4)"/>
+  <text x="240" y="134" text-anchor="middle" class="w">Vecino</text>
+  <text x="240" y="152" text-anchor="middle" class="w">canal 3</text>
+  <text x="240" y="104" text-anchor="middle" class="m">(sin cable)</text>
+  <line x1="40" y1="250" x2="720" y2="250" class="ln-s"/>
+  <text x="40" y="272" class="m">0 m</text><text x="240" y="272" text-anchor="middle" class="m">15 m</text>
+  <text x="380" y="272" text-anchor="middle" class="m">30 m</text><text x="720" y="272" text-anchor="end" class="m">60 m</text>
+  <rect x="440" y="206" width="70" height="34" rx="6" class="b"/>
+  <text x="475" y="228" text-anchor="middle">PC</text>
+  <path class="ln" d="M420 223 h-30 m0 0 l8 -5 m-8 5 l8 5 M530 223 h30 m0 0 l-8 -5 m8 5 l-8 5"/>
+  <text x="475" y="196" text-anchor="middle" class="m">se pasea por el pasillo</text>
+  <text x="380" y="190" text-anchor="middle" class="m">))) mismo nombre de red: LAB_WIFI (((</text>
+</svg>
+<figcaption>Los tres APs forman <em>una sola red</em> para el usuario (mismo nombre), pero cada uno tiene su propia dirección (BSSID) y su canal.</figcaption>
+</figure>
+
+<h2 id="secciones">Por dónde seguir</h2>
+<div class="cards">
+  <a class="card" href="senal.html"><span class="num">1</span><h3>Señal y distancia</h3><p>dBm, cuánto se pierde con los metros y las paredes, y hasta dónde llega un AP.</p></a>
+  <a class="card" href="canales.html"><span class="num">2</span><h3>Canales e interferencias</h3><p>Por qué 1-6-11, qué pasa cuando dos redes se pisan y por qué "en medio" es peor.</p></a>
+  <a class="card" href="velocidad.html"><span class="num">3</span><h3>Señal y velocidad</h3><p>SNR, MCS, el cliente lento que frena a todos y el aire que se comen los anuncios.</p></a>
+  <a class="card" href="roaming.html"><span class="num">4</span><h3>Roaming</h3><p>Pasea por el pasillo: cuándo cambia de AP un móvil, el cliente pegajoso y cómo el AP te echa.</p></a>
+  <a class="card" href="potencia.html"><span class="num">5</span><h3>¿Bajar la potencia?</h3><p>La pregunta del millón, con 9 escenarios comparados y el tamaño de cada celda.</p></a>
+  <a class="card" href="analizador.html"><span class="num">6</span><h3>Analizadores wifi</h3><p>Los 4 tipos, cuándo usar cada uno y cómo leer lo que dicen.</p></a>
+  <a class="card" href="laboratorio.html"><span class="num">7</span><h3>El laboratorio</h3><p>Cómo montar todo esto en tu Linux con tarjetas wifi virtuales.</p></a>
+</div>
+
+<h2 id="glosario">Glosario</h2>
+<div class="table-wrap"><table>
+<tr><th>Palabra</th><th>Qué es</th><th>Ejemplo</th></tr>
+<tr><td><strong>AP</strong></td><td>Punto de acceso: el aparato que emite el wifi</td><td>Un router, un repetidor, un AP de techo</td></tr>
+<tr><td><strong>SSID</strong></td><td>El nombre de la red</td><td><code>LAB_WIFI</code></td></tr>
+<tr><td><strong>BSSID</strong></td><td>La dirección (MAC) de <em>un</em> AP concreto</td><td><code>02:11:11:11:11:11</code></td></tr>
+<tr><td><strong>Celda</strong></td><td>La zona donde un AP es el que mejor se oye</td><td></td></tr>
+<tr><td><strong>RSSI</strong></td><td>La señal que recibes, en dBm</td><td>-60 dBm</td></tr>
+<tr><td><strong>Ruido</strong></td><td>Lo que "suena" en el aire aunque nadie hable</td><td>-95 dBm</td></tr>
+<tr><td><strong>SNR</strong></td><td>Señal menos ruido. Es lo que manda en la velocidad</td><td>-60 − (-95) = 35 dB</td></tr>
+<tr><td><strong>MCS</strong></td><td>La "marcha" del wifi: cuánta información mete en cada símbolo</td><td>MCS 15 = 130 Mbit/s</td></tr>
+<tr><td><strong>Roaming</strong></td><td>Cambiar de AP sin cambiar de red</td><td>Del AP del salón al del dormitorio</td></tr>
+<tr><td><strong>Canal</strong></td><td>La "frecuencia" donde emite un AP</td><td>Canal 1 = 2412 MHz</td></tr>
+</table></div>
+
+<p class="footer">Hecho a partir del laboratorio <em>31 · wifi con ip netns</em>. Todos los números salen del mismo modelo que usan sus programas (<code>mapa_aps.py</code>, <code>calculadora_velocidad.py</code>, <code>analizador_wifi.py</code>): pérdida = 40 + 30·log10(distancia) + 5 por pared, ruido -95 dBm, wifi 4 con 2 antenas.</p>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Bajar la potencia?</title>
+<meta name="description" content="Si bajas la potencia de un punto de acceso wifi, ¿hay más señal o más velocidad? La respuesta con 9 escenarios comparados, el tamaño de celda y la reutilización de canales.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="index.html">wifi<span>·</span>por dentro</a>
+  <nav class="topnav">
+    <a href="index.html">Inicio</a>
+    <a href="senal.html">Señal</a>
+    <a href="canales.html">Canales</a>
+    <a href="velocidad.html">Velocidad</a>
+    <a href="roaming.html">Roaming</a>
+    <a href="potencia.html" class="active">Potencia</a>
+    <a href="analizador.html">Analizador</a>
+    <a href="laboratorio.html">Laboratorio</a>
+  </nav>
+  <button id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro">◐</button>
+</div></header>
+
+<div class="layout">
+<aside class="toc"><h4>En esta página</h4><ol></ol></aside>
+<main>
+<span class="tag">5 · Potencia</span>
+<h1>¿Bajar la potencia da más velocidad?</h1>
+<p class="lead">"Si limito la distancia del AP, ¿los aparatos tienen más señal, más velocidad o lo mismo?" Respuesta corta: <strong>a un aparato concreto no le da nada; a la red entera, sí</strong>. Aquí está el porqué, con números.</p>
+
+<h2 id="corta">La respuesta en una tabla</h2>
+<div class="table-wrap"><table>
+<tr><th>Al bajar la potencia del AP…</th><th>Qué pasa</th></tr>
+<tr><td>Señal de cada aparato</td><td><span class="st st-bad">Baja</span> lo mismo que bajas. Nunca sube</td></tr>
+<tr><td>Velocidad de un aparato cerca</td><td><span class="st st-ok">Igual</span> (va sobrado de SNR)</td></tr>
+<tr><td>Velocidad de un aparato en el borde</td><td><span class="st st-bad">Baja</span> o se queda sin cobertura</td></tr>
+<tr><td>Interferencia con tus otros APs del mismo canal</td><td><span class="st st-good">Baja mucho</span></td></tr>
+<tr><td>Capacidad de la red (si hay APs suficientes)</td><td><span class="st st-good">Sube</span></td></tr>
+<tr><td>Roaming</td><td><span class="st st-good">Mejora</span>: el móvil suelta antes el AP lejano</td></tr>
+</table></div>
+
+<h2 id="aparato">Un aparato cerca no gana nada</h2>
+<p>La potencia no se "concentra" en los que están cerca: sale igual en todas direcciones. Si bajas 10 dB, <strong>todos</strong> reciben 10 dB menos.</p>
+<figure class="chart">
+  <p class="ch-title">Señal según la distancia: AP a 20 dBm frente a AP con menos potencia</p>
+  <div class="controls"><label>Potencia nueva <input type="range" id="pot" min="0" max="20" value="10"> <output id="pot-o"></output></label></div>
+  <div id="g-pot"></div>
+  <div class="stats" id="pot-stats"></div>
+</figure>
+
+<h2 id="red">Pero la red entera sí gana</h2>
+<p>Con varios APs, lo que limita no es la señal sino <strong>cuántos APs se reparten el mismo canal</strong>. En 2,4 GHz solo hay 3 canales limpios: si pones más de 3 APs, alguno repite canal. Si los que repiten se oyen (por encima de -82 dBm), se reparten el aire. Bajando la potencia <strong>dejan de oírse</strong>. Mira los escenarios del pasillo de 60 m:</p>
+<figure class="chart">
+  <p class="ch-title">Capacidad total del pasillo (Mbit/s, todos los APs a la vez)</p>
+  <div id="g-cap"></div>
+</figure>
+<figure class="chart">
+  <p class="ch-title">Velocidad media de un cliente (Mbit/s)</p>
+  <div id="g-media"></div>
+</figure>
+<div class="table-wrap"><table id="t-esc">
+<tr><th>Escenario</th><th>Qué es</th><th class="n">Media</th><th class="n">Capacidad</th></tr>
+</table></div>
+<div class="two">
+  <div class="box key"><strong>A → D:</strong> bajar de 20 a 10 dBm con APs cada 30 m no cambia nada. 10 dBm ya llegaba: los 20 dBm solo molestaban a los vecinos.</div>
+  <div class="box key"><strong>A → F:</strong> poner 5 APs <em>sin bajar la potencia</em> no sirve. El AP1 y el AP4 (los dos en canal 1, a 45 m) se oyen a -70 dBm y se reparten el aire.</div>
+  <div class="box key"><strong>F → E:</strong> los mismos 5 APs a 5 dBm ya no se oyen (-85 dBm): cada uno tiene su canal entero. <strong>+53 % de capacidad</strong> respecto a A.</div>
+</div>
+
+<h2 id="celdas">Celdas y reutilización de canales</h2>
+<p>Cada AP tiene una zona <strong>útil</strong> (donde llega con -67 dBm o más) y una zona donde <strong>molesta</strong> a otros APs de su canal (donde llega con -82 dBm o más). La segunda es siempre unas <strong>3 veces</strong> más grande que la primera. Juega con la separación y la potencia:</p>
+<figure class="chart">
+  <div class="controls">
+    <label>Separación entre APs <input type="range" id="sep" min="10" max="45" value="15"> <output id="sep-o"></output></label>
+    <label>Potencia <input type="range" id="potc" min="0" max="20" value="20"> <output id="potc-o"></output></label>
+  </div>
+  <div id="g-celdas"></div>
+  <div class="box" id="celdas-v" style="margin:6px 0 0"></div>
+</figure>
+<p><strong>Regla para elegir la potencia:</strong> ajústala a la distancia entre APs, no "al máximo". Si los APs están a <code>S</code> metros, quieres -67 dBm a 0,6·S:</p>
+<pre><code>potencia (dBm) = -67 + 40 + 30·log10(0,6·S) + 5·paredes</code></pre>
+<div class="table-wrap"><table>
+<tr><th>Potencia</th><th class="n">Útil hasta (-67)</th><th class="n">Útil con 2 paredes</th><th class="n">Molesta hasta (-82)</th></tr>
+<tr><td>20 dBm</td><td class="n">37 m</td><td class="n">17 m</td><td class="n">117 m</td></tr>
+<tr><td>17 dBm</td><td class="n">29 m</td><td class="n">14 m</td><td class="n">93 m</td></tr>
+<tr><td>14 dBm</td><td class="n">23 m</td><td class="n">11 m</td><td class="n">74 m</td></tr>
+<tr><td>10 dBm</td><td class="n">17 m</td><td class="n">8 m</td><td class="n">54 m</td></tr>
+<tr><td>5 dBm</td><td class="n">12 m</td><td class="n">5 m</td><td class="n">37 m</td></tr>
+</table></div>
+
+<h2 id="basicas">Quitar las velocidades lentas</h2>
+<p>Otra forma de encoger la celda "de verdad": que el AP no hable en las velocidades de 802.11b (1, 2, 5,5 y 11 Mbit/s). Así los clientes lejanos, que solo podrían ir a 1-2 Mbit/s, no pueden engancharse (buscan otro AP) y los beacons gastan 12 veces menos aire (ver <a href="velocidad.html#beacons">beacons</a>). En <code>hostapd</code>:</p>
+<pre><code>supported_rates=60 90 120 180 240 360 480 540
+basic_rates=120 240</code></pre>
+<p>(Unidades de 100 kbit/s: <code>120</code> = 12 Mbit/s.) Desventaja: los aparatos que solo hablan 802.11b (muy viejos) dejan de funcionar.</p>
+
+<h2 id="bandas">2,4 GHz contra 5 GHz</h2>
+<figure class="chart">
+  <p class="ch-title">Misma potencia (20 dBm), distinta banda</p>
+  <div id="g-bandas"></div>
+  <figcaption>En 5 GHz se pierden 7 dB más en el primer metro (47 en vez de 40), y las paredes quitan más. Con la misma potencia, la celda de 2,4 GHz es mucho mayor y los móviles se agarran a ella (más lenta y saturada). Regla: la potencia de 2,4 GHz unos 6 dB por debajo de la de 5 GHz.</figcaption>
+</figure>
+
+<h2 id="resumen">Resumen</h2>
+<ol>
+  <li><strong>Bajar potencia no da más señal a nadie.</strong></li>
+  <li><strong>No da más velocidad a un aparato concreto</strong> mientras vaya sobrado (por encima de ~-65 dBm). En el borde, se la quita.</li>
+  <li><strong>Sí da más velocidad a la red</strong> cuando hay varios APs: los del mismo canal dejan de oírse, los clientes se van antes al AP cercano y el enlace queda equilibrado.</li>
+  <li><strong>Con un solo AP no tiene sentido bajarla</strong> (salvo para no molestar al vecino o equilibrar con los móviles).</li>
+  <li>Lo que <strong>sí</strong> da más velocidad a un aparato: estar más cerca de un AP (poner más APs), canal limpio, 5 GHz, más ancho de canal y menos clientes lentos.</li>
+</ol>
+
+<div class="box lab">En el simulador se comprueba el punto 1 y 2: bajando el AP de 20 a 0 dBm la señal del PC pasa de -30 a -50 y la velocidad del enlace no cambia. Los puntos 3 y 4 se calculan con <code>python3 mapa_aps.py</code> (escenarios A-I, los mismos de esta página) y las velocidades básicas se ven quitando la <code>#</code> en <code>hostapd_ap3.conf</code> y escaneando.</div>
+
+<div class="next"><a href="roaming.html">← Roaming</a><a href="analizador.html">Analizadores wifi →</a></div>
+</main>
+</div>
+
+<script>
+// Un aparato cerca
+const pot = document.getElementById("pot");
+const ds = []; for (let d = 1; d <= 60; d += 0.5) ds.push(d);
+const velReal = (s) => { const m = elegirMcs(s - MODELO.RUIDO); return m ? m.mbps * MODELO.EFICIENCIA : 0; };
+function pintarPot() {
+  const P = +pot.value;
+  document.getElementById("pot-o").textContent = P + " dBm";
+  graficaLineas(document.getElementById("g-pot"), {
+    aria: "Señal en función de la distancia con dos potencias",
+    series: [
+      { name: "AP a 20 dBm", color: color(1), data: ds.map((d) => [d, senal(20, d)]) },
+      { name: "AP a " + P + " dBm", color: color(2), data: ds.map((d) => [d, senal(P, d)]) },
+    ],
+    x: { min: 1, max: 60, label: "distancia (m)", unit: "m" },
+    y: { min: -100, max: -10, label: "señal (dBm)", tt: (v) => fmt0(v) + " dBm · " + fmt0(velReal(v)) + " Mbit/s" },
+    refs: [{ y: -65, label: "-65: ya vas a la velocidad máxima" }, { y: -85, label: "-85: sin conexión" }],
+    height: 260,
+  });
+  const st = document.getElementById("pot-stats");
+  st.replaceChildren();
+  [[5, "Móvil a 5 m"], [20, "Móvil a 20 m"], [40, "Móvil a 40 m"]].forEach(([d, l]) => {
+    const a = senal(20, d), b = senal(P, d);
+    const s = htmlEl("div", { class: "stat" }, st);
+    htmlEl("div", { class: "s-l" }, s, l);
+    htmlEl("div", { class: "s-v" }, s, fmt0(velReal(a)) + " → " + fmt0(velReal(b)) + " Mbit/s");
+    htmlEl("div", { class: "s-d" }, s, fmt0(a) + " → " + fmt0(b) + " dBm");
+  });
+}
+pot.addEventListener("input", pintarPot);
+registrar(pintarPot);
+
+// Escenarios
+const ORDEN = ["G", "A", "D", "B", "C", "F", "E", "H", "I"];
+const RES = {}; ORDEN.forEach((e) => (RES[e] = paseo(ESCENARIOS[e].aps, 5)));
+const t = document.getElementById("t-esc");
+ORDEN.forEach((e) => {
+  const tr = htmlEl("tr", e === "E" ? { class: "hl" } : {}, t);
+  htmlEl("td", {}, tr, e);
+  htmlEl("td", {}, tr, ESCENARIOS[e].d);
+  htmlEl("td", { class: "n" }, tr, fmt0(RES[e].media) + " Mbit/s");
+  htmlEl("td", { class: "n" }, tr, fmt0(RES[e].capacidad) + " Mbit/s");
+});
+registrar(() => {
+  const cat = ORDEN.map((e) => e);
+  graficaBarras(document.getElementById("g-cap"), {
+    aria: "Capacidad total por escenario", categorias: cat, xLabel: "Escenario",
+    series: [{ name: "Capacidad", color: color(1), values: ORDEN.map((e) => RES[e].capacidad) }],
+    y: { label: "Mbit/s", fmt: fmt0, unit: " Mbit/s" }, etiquetas: true, height: 240, resaltar: ORDEN.indexOf("E"),
+  });
+  graficaBarras(document.getElementById("g-media"), {
+    aria: "Velocidad media por escenario", categorias: cat, xLabel: "Escenario",
+    series: [{ name: "Velocidad media", color: color(1), values: ORDEN.map((e) => RES[e].media) }],
+    y: { label: "Mbit/s", fmt: fmt0, unit: " Mbit/s", max: 95 }, etiquetas: true, height: 220, resaltar: ORDEN.indexOf("E"),
+  });
+});
+
+// Celdas: pasillo de 90 m, APs cada S metros, canales 1-6-11 repetidos
+const sep = document.getElementById("sep"), potc = document.getElementById("potc");
+function pintarCeldas() {
+  const S = +sep.value, P = +potc.value;
+  document.getElementById("sep-o").textContent = S + " m";
+  document.getElementById("potc-o").textContent = P + " dBm";
+  const r67 = Math.pow(10, (P + 67 - 40) / 30), r82 = Math.pow(10, (P + 82 - 40) / 30);
+  const cont = document.getElementById("g-celdas");
+  cont.replaceChildren();
+  leyenda(cont, [{ name: "Canal 1", color: color(1) }, { name: "Canal 6", color: color(2) }, { name: "Canal 11", color: color(3) }], "rect");
+  const W = Math.max(300, cont.clientWidth), H = 210, L = 64, R = 12, largo = 90;
+  const X = (m) => L + (Math.max(-5, Math.min(largo + 5, m)) + 5) / (largo + 10) * (W - L - R);
+  const svg = svgEl("svg", { class: "chart-svg", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Celdas de cada AP en el pasillo" }, cont);
+  const canales = [1, 6, 11];
+  canales.forEach((c, k) => {
+    const y = 30 + k * 52;
+    svgText(svg, 4, y + 4, "Canal " + c, { class: "lbl" });
+    svgEl("line", { x1: L, x2: W - R, y1: y, y2: y, class: "grid" }, svg);
+  });
+  const aps = [];
+  for (let i = 0, x = 0; x <= largo; i++, x += S) aps.push({ x, canal: canales[i % 3], k: i % 3, n: i + 1 });
+  aps.forEach((a) => {
+    const y = 30 + a.k * 52, col = color(a.k + 1);
+    svgEl("rect", { x: X(a.x - r82), y: y - 10, width: X(a.x + r82) - X(a.x - r82), height: 20, rx: 10, style: `fill:${col};fill-opacity:0.10` }, svg);
+    svgEl("rect", { x: X(a.x - r67), y: y - 5, width: X(a.x + r67) - X(a.x - r67), height: 10, rx: 5, style: `fill:${col};fill-opacity:0.55` }, svg);
+    svgEl("circle", { cx: X(a.x), cy: y, r: 6, class: "dot", style: `fill:${col}` }, svg);
+    svgText(svg, X(a.x), y + 24, "AP" + a.n, { "text-anchor": "middle", class: "lbl" });
+  });
+  for (let m = 0; m <= largo; m += 15) svgText(svg, X(m), H - 6, m + " m", { "text-anchor": "middle" });
+  const repite = 3 * S;
+  const seOyen = repite < r82 && aps.length > 3;
+  const huecos = S / 2 > r67;
+  const v = document.getElementById("celdas-v");
+  v.replaceChildren();
+  const add = (cls, txt) => { const p = htmlEl("p", { style: "margin:2px 0" }, v); htmlEl("span", { class: "st " + cls }, p, txt); };
+  add("st-good", `Zona útil (barra fuerte): ${fmt0(r67)} m a cada lado · zona donde molesta (barra clara): ${fmt0(r82)} m`);
+  add(huecos ? "st-none" : "st-good", huecos ? `Huecos: entre dos APs hay puntos por debajo de -67 dBm (a ${S / 2} m del más cercano)` : "Sin huecos: en todo el pasillo hay -67 dBm o más");
+  add(seOyen ? "st-bad" : "st-good", seOyen ? `Los APs del mismo canal (a ${repite} m) se oyen: se reparten el aire` : `Los APs del mismo canal (a ${repite} m) no se oyen: cada uno tiene su canal entero`);
+  const rec = -67 + 40 + 30 * Math.log10(0.6 * S);
+  add("st-ok", `Potencia recomendada para APs cada ${S} m: ${fmt1(rec)} dBm`);
+}
+[sep, potc].forEach((e) => e.addEventListener("input", pintarCeldas));
+registrar(pintarCeldas);
+
+// Bandas
+registrar(() => graficaLineas(document.getElementById("g-bandas"), {
+  aria: "Señal según la distancia en 2,4 y 5 GHz",
+  series: [
+    { name: "2,4 GHz", color: color(1), data: ds.map((d) => [d, senal(20, d)]) },
+    { name: "5 GHz", color: color(2), data: ds.map((d) => [d, senal(20, d) - 7]) },
+  ],
+  x: { min: 1, max: 60, label: "distancia (m)", unit: "m" },
+  y: { min: -100, max: -10, label: "señal (dBm)", tt: (v) => fmt0(v) + " dBm" },
+  refs: [{ y: -67, label: "-67" }], height: 240,
+}));
+</script>
+</body>
+</html>
